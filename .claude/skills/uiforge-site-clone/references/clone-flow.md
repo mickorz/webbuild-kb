@@ -86,15 +86,23 @@ node ../../thirdparties/UIForge/tools/uiforge-archive.mjs <URL> --out-dir ./arch
 - `--explore` 必须加：抓取过程中自动滚动、点击页内控件，把这些交互触发的 API 数据也录进归档——探索越多，离线回放可用的交互越多
 - 结束后关注输出的响应数（scripts/css/data-API/fonts/images 分类计数），登录后抓取的 data/API 载荷应明显多于匿名抓取；明显偏少说明 token 失效，重跑第 2 步
 
-## 第 4 步：起回放服务器
+## 第 4 步：起回放服务器并用默认浏览器打开
 
 ```bash
 cd archive-<站点名> && node serve.mjs
 ```
 
-输出 `UIForge replay → http://localhost:8787`。镜像在 `files/` 下按真实 URL 路径存放（真实文件名与扩展名），服务器每次请求读最新文件——改镜像内文本，刷新即生效。
+输出 `UIForge replay → http://localhost:8787`。**起服务后立即用默认浏览器打开回放页给用户看**：
+
+```bash
+cmd //c start "" http://localhost:8787/console/console.html   # git-bash 写法；cmd 内为 start "" <URL>
+```
+
+bishuxiezuo 归档有速启脚本：仓库根 `open.bat`（检查 8787 未占用才启动服务器，然后打开默认浏览器，双击即可用）。
 
 端口占用或目录删不掉（`Device or resource busy`）→ 上次的 serve.mjs 还在跑：`netstat -ano | grep 8787` 找 PID，`taskkill //F //PID <pid>` 单独处理，**禁止杀全部 node 进程**。
+
+镜像在 `files/` 下按真实 URL 路径存放（真实文件名与扩展名），服务器每次请求读最新文件——改镜像内文本，刷新即生效。
 
 ## 第 5 步：回放验证（渲染）
 

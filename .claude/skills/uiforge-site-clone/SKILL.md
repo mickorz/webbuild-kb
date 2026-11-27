@@ -1,6 +1,6 @@
 ---
 name: uiforge-site-clone
-version: 1.1.0
+version: 1.2.0
 display_name: 网站复刻抓取
 display_name_en: UIForge Site Clone
 description: >
@@ -79,6 +79,9 @@ NODE_PATH="<common-abs>" node ../../thirdparties/UIForge/tools/uiforge-archive.m
 # 起离线回放（打印 http://localhost:8787）
 cd archive-<站点名> && node serve.mjs
 
+# 用默认浏览器打开回放页（git-bash 写法；cmd 内去掉 cmd //c 前缀）
+cmd //c start "" http://localhost:8787/console/console.html
+
 # 仅当回放白屏且 network 出现 GET /login.html 失败时：注入 localStorage 登录态种子
 cd .. && node ../../.claude/skills/uiforge-site-clone/scripts/inject-auth-seed.mjs --auth ./auth.json --files ./archive-<站点名>/files --entry <入口页相对路径，如 console/console.html>
 ```
@@ -89,7 +92,7 @@ cd .. && node ../../.claude/skills/uiforge-site-clone/scripts/inject-auth-seed.m
 - 回放白屏 + network 有 `GET /login.html` 失败 → 登录态在 localStorage、回放 origin 没有，按 clone-flow.md 第 6 步注入种子
 - `Playwright not found` → 确认 playwright 装在 `workspace/common/`；自有脚本自动解析 `cwd/../common`，UIForge 工具需 `NODE_PATH` 指向 common 绝对路径（git-bash 用 `cygpath -w`）
 - 登录后抓取响应数明显偏少 → token 可能过期，重跑 `login-capture.mjs` 刷新 `auth.json`
-- 完成标准：真实浏览器验证渲染正常 + 至少一个页内交互可用（参照 `docs/testing.md` 冒烟清单），并汇报响应数、交互验证结果与局限
+- 完成标准：起回放后用默认浏览器打开页面给用户看；真实浏览器验证渲染正常 + 至少一个页内交互可用（参照 `docs/testing.md` 冒烟清单），并汇报响应数、交互验证结果与局限。bishuxiezuo 归档可直接运行仓库根 `open.bat` 快速启动并打开
 
 ## References
 
