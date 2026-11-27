@@ -6,14 +6,14 @@
 
 | 名称 | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `workspace/credentials.json` | JSON 文件 | 无 | 登录凭据（`{ "email": "...", "password": "..." }`），供 `login.mjs` 读取；**已 gitignore，不入库** |
+| `workspace/credentials.json` | JSON 文件 | 无 | 登录凭据（`{ "email": "...", "password": "..." }`），供 uiforge-site-clone 技能的 login-capture.mjs 读取；**已 gitignore，不入库** |
 | `workspace/auth.json` | JSON 文件 | 无 | Playwright storageState（cookies + localStorage），抓取登录态载体；**已 gitignore** |
 | `--out-dir` | CLI 参数 | `./archive` | uiforge-archive 输出目录，本仓库约定 `./archive-<站点名>`；**archive-*/ 已 gitignore** |
 | 回放端口 | serve.mjs 固定 | 8787 | 离线回放服务器端口 |
 
 ## Taking Effect & Verification
 
-凭据改动后重新执行 `node login.mjs` 生成新的 `auth.json`，再带 `--storage-state ./auth.json` 重新抓取；回放服务器每次请求都读最新文件，镜像内文本改动刷新即生效。
+凭据改动后重新执行 `node ../.claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <入口页URL>` 生成新的 `auth.json`，再带 `--storage-state ./auth.json` 重新抓取；回放服务器每次请求都读最新文件，镜像内文本改动刷新即生效。
 
 ## Upgrade
 

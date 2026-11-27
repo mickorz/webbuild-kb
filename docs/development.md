@@ -7,7 +7,7 @@
 | `git submodule update --init --recursive` | 还原子模块到固定 commit |
 | `git submodule update --remote` | 升级子模块到上游最新 |
 | `cd workspace && npm install && npx playwright install chromium` | 装抓取沙盒依赖 |
-| `node workspace/login.mjs` | 登录目标站并保存 storageState |
+| `node .claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <入口页URL>` | 登录目标站并保存 storageState |
 | `node thirdparties/UIForge/tools/uiforge-archive.mjs <url> --out-dir ./workspace/archive-x --explore` | 抓取 Archive |
 | `node workspace/archive-x/serve.mjs` | 起离线回放（:8787） |
 
@@ -16,7 +16,7 @@
 ```text
 webbuild-kb/
 ├── thirdparties/     三个只读 submodule（PrprprWarp / UIForge / browser-bridge），清单见 REFERENCES.md
-├── workspace/        抓取沙盒：login.mjs、Playwright 依赖、archive 产物（凭据与产物不入库）
+├── workspace/        抓取沙盒：Playwright 依赖、archive 产物（凭据与产物不入库）
 ├── docs/             读者向文档（本目录）
 ├── dev-docs/         开发过程文档（规范见根 CLAUDE.md）
 └── dev-examples/     开发期沙盒

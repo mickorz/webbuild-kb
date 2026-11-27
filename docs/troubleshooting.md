@@ -14,7 +14,7 @@
 
 **端口 8787 被占用 / 目录删不掉（Device or resource busy）**：上次起的 `serve.mjs` 还在运行。找到对应 PID（`netstat -ano | grep 8787`）后 `taskkill //F //PID <pid>`，不要杀全部 node 进程。
 
-**登录后抓取的响应数明显偏少**：`--explore` 未开启或登录态失效。先重跑 `login.mjs` 刷新 `auth.json`，再带 `--explore` 重抓。
+**登录后抓取的响应数明显偏少**：`--explore` 未开启或登录态失效。先重跑 login-capture.mjs（uiforge-site-clone 技能脚本）刷新 `auth.json`，再带 `--explore` 重抓。
 
 ## Still Stuck
 

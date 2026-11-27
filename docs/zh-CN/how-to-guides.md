@@ -5,7 +5,7 @@
 场景：目标页面在登录后才渲染真实数据，匿名抓取只能拿到登录页。
 
 1. 写好凭据 `workspace/credentials.json`：`{ "email": "...", "password": "..." }`
-2. 登录并保存会话：`cd workspace && node login.mjs`（生成 `auth.json`，脚本内会校验密码框是否消失）
+2. 登录并保存会话：`cd workspace && node ../.claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <登录后入口页URL>`（生成 `auth.json`，脚本内会校验密码框是否消失）
 3. 带登录态抓取：
    `node ../thirdparties/UIForge/tools/uiforge-archive.mjs <url> --out-dir ./archive-x --explore --storage-state ./auth.json`
 4. 启动回放：`cd archive-x && node serve.mjs`
