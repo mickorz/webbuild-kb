@@ -1,0 +1,9 @@
+[submodule "thirdparties/PrprprWarp"]
+	path = thirdparties/PrprprWarp
+	url = https://github.com/StarsailsClover/PrprprWarp.git
+[submodule "thirdparties/UIForge"]
+	path = thirdparties/UIForge
+	url = https://github.com/TaewoooPark/UIForge.git
+[submodule "thirdparties/browser-bridge"]
+	path = thirdparties/browser-bridge
+	url = https://github.com/vitalysim/browser-bridge
