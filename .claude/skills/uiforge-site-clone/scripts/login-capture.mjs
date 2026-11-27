@@ -10,15 +10,16 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-// playwright 从当前工作目录解析（脚本自身目录可能没有 node_modules，约定在 workspace/ 下运行）
+// playwright 解析顺序：cwd → cwd/common → cwd/../common
+// 工作区布局：workspace/common/（共享依赖）+ workspace/<站点>/（每站独立，在本目录运行）
 async function loadChromium() {
-  let m
-  try { m = await import('playwright') } catch {}
-  if (!m || !m.chromium) {
-    const { createRequire } = await import('node:module')
-    const req = createRequire(join(process.cwd(), 'package.json'))
-    m = await import(pathToFileURL(req.resolve('playwright')).href)
-  }
+  const { createRequire } = await import('node:module')
+  const req = createRequire(join(process.cwd(), 'package.json'))
+  const paths = [process.cwd(), join(process.cwd(), 'common'), join(process.cwd(), '..', 'common')]
+  let entry
+  try { entry = req.resolve('playwright', { paths }) }
+  catch { console.error('找不到 playwright：先在 workspace/common/ 下 npm i -D playwright && npx playwright install chromium'); process.exit(3) }
+  const m = await import(pathToFileURL(entry).href)
   const chromium = m.chromium ?? (m.default && m.default.chromium)
   if (!chromium) { console.error('无法从 playwright 模块中取到 chromium 导出'); process.exit(3) }
   return chromium

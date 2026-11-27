@@ -4,7 +4,7 @@
 
 **`git submodule status` 出现 `+` 前缀**：子模块 HEAD 与固定 commit 不一致，执行 `git submodule update --init --recursive` 还原。
 
-**Playwright not found 报错**：UIForge 工具从当前工作目录解析 playwright，必须先 `cd workspace && npm i -D playwright && npx playwright install chromium`，并在 `workspace/` 目录下运行抓取命令。
+**Playwright not found 报错**：playwright 装在 `workspace/common/`。自有脚本自动解析 `cwd/../common`；直接调用 UIForge 工具时需设 `NODE_PATH` 为 common 绝对路径（git-bash：`NODE_PATH="$(cygpath -w "$(pwd)/../common")"`）。
 
 ## Runtime
 

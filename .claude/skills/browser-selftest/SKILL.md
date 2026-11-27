@@ -50,7 +50,7 @@ irm https://raw.githubusercontent.com/leeguooooo/chrome-use/main/install.ps1 | i
 
 <!-- 按项目实际替换：下面三条是 webbuild-kb 的真实命令与地址 -->
 ```bash
-cd workspace/archive-bishu && node serve.mjs   # 起离线回放服务（后台 + 日志落盘）                       # 起服务（后台 + 日志落盘）
+cd workspace/bishuxiezuo/archive-bishu && node serve.mjs   # 起离线回放服务（后台 + 日志落盘）                       # 起服务（后台 + 日志落盘）
 curl -s -m 3 http://localhost:8787/console/console.html           # 健康检查 / 首页探活，期望非 5xx
 ```
 

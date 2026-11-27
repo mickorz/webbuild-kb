@@ -1,5 +1,7 @@
 # 示例：bishuxiezuo.cn 创作控制台完整复刻（2026-11-27 真实执行记录）
 
+> 注意：本次执行时工作区还是旧布局（workspace/ 平铺）；现行为 workspace/<站点>/ 每站独立目录 + workspace/common/ 共享依赖，路径以 references/clone-flow.md 为准。以下命令保持历史原貌。
+
 ## 目标
 
 复刻 `https://bishuxiezuo.cn/console/console.html`（笔枢 NOVELBUILT 创作控制台，登录后才有真实数据）为可离线回放的 UIForge Archive。

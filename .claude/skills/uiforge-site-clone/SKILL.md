@@ -1,6 +1,6 @@
 ---
 name: uiforge-site-clone
-version: 1.0.0
+version: 1.1.0
 display_name: 网站复刻抓取
 display_name_en: UIForge Site Clone
 description: >
@@ -37,39 +37,57 @@ description_en: >-
 
 - 只做 **Archive 捕获 + 回放验证**。不做 Restore（可编辑 React 还原）、不做 Freeze（像素冻结）——用户需要时提示单独执行对应 UIForge 工具链
 - 不修改 `thirdparties/` 下任何子模块源码
+- **登录墙必须停**：目标站需要登录时，立即停下向用户询问账号密码，等用户提供后才能继续；不得猜测凭据，memory/文档中的旧凭据也必须先向用户确认沿用
 - 凭据（`credentials.json` / `auth.json`）与抓取产物（`archive-*/`）一律 gitignore，不入库、不写进文档、不内嵌进脚本源码
 - 不执行「杀全部 node 进程」类命令；回放服务器占用端口/目录时按 PID 单独处理
+
+## Workspace 布局
+
+每站一个独立目录，共享依赖放 `common/`：
+
+```text
+workspace/
+├── common/                  # 跨站点共享：package.json + node_modules（playwright）
+└── <站点名>/                # 每站独立目录，所有命令在本目录内执行
+    ├── credentials.json     # 该站登录凭据（gitignored）
+    ├── auth.json            # storageState（gitignored）
+    └── archive-<站点名>/    # 抓取产物（gitignored）
+```
+
+自有脚本从 `cwd/../common` 解析 playwright；UIForge 工具需 `NODE_PATH` 指向 `common`（见速查命令）。
 
 ## Inputs
 
 | 输入 | 必填 | 说明 |
 |---|---|---|
 | 目标 URL | 是 | 登录站填登录后入口页地址；公开站填页面地址 |
-| 凭据 | 登录站必填 | `workspace/credentials.json`：`{ "email": "...", "password": "..." }`（gitignored） |
-| 归档目录 | 否 | 默认 `workspace/archive-<站点名>/` |
+| 站点目录名 | 是 | `workspace/<站点名>/`，kebab-case |
+| 凭据 | 登录站必填 | 检测到登录墙时**停下向用户索要**，写入 `workspace/<站点名>/credentials.json`（gitignored） |
+| 归档目录 | 否 | 默认 `workspace/<站点名>/archive-<站点名>/` |
 
 ## Main Workflow
 
-完整分步流程（环境准备 → 登录捕获 → 抓取 → 回放 → 白屏修复 → 交互验证）见 [references/clone-flow.md](references/clone-flow.md)。速查（均在 `workspace/` 下执行）：
+完整分步流程（环境准备 → 探测 → 登录捕获 → 抓取 → 回放 → 白屏修复 → 交互验证）见 [references/clone-flow.md](references/clone-flow.md)。速查（均在 `workspace/<站点名>/` 下执行，`<common-abs>` 为 common 目录的绝对路径）：
 
 ```bash
-# 登录站：登录并保存会话（生成 auth.json）
-node ../.claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <登录后入口页URL>
+# 登录站：先停下向用户索要账号密码，写入 ./credentials.json 后再执行
+node ../../.claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <登录后入口页URL>
 
-# 带登录态 + 交互预热抓取
-node ../thirdparties/UIForge/tools/uiforge-archive.mjs <URL> --out-dir ./archive-x --explore --storage-state ./auth.json
+# 带登录态 + 交互预热抓取（NODE_PATH 让 UIForge 工具找到 common 里的 playwright）
+NODE_PATH="<common-abs>" node ../../thirdparties/UIForge/tools/uiforge-archive.mjs <URL> --out-dir ./archive-<站点名> --explore --storage-state ./auth.json
 
 # 起离线回放（打印 http://localhost:8787）
-cd archive-x && node serve.mjs
+cd archive-<站点名> && node serve.mjs
 
 # 仅当回放白屏且 network 出现 GET /login.html 失败时：注入 localStorage 登录态种子
-cd .. && node ../.claude/skills/uiforge-site-clone/scripts/inject-auth-seed.mjs --auth ./auth.json --files ./archive-x/files --entry <入口页相对路径，如 console/console.html>
+cd .. && node ../../.claude/skills/uiforge-site-clone/scripts/inject-auth-seed.mjs --auth ./auth.json --files ./archive-<站点名>/files --entry <入口页相对路径，如 console/console.html>
 ```
 
 ## Error Policy
 
+- **登录墙**：停下向用户索要账号密码（含 memory 中已有旧凭据的情况，需用户确认沿用），拿到后写入站点目录的 `credentials.json` 再继续；禁止自行尝试凭据
 - 回放白屏 + network 有 `GET /login.html` 失败 → 登录态在 localStorage、回放 origin 没有，按 clone-flow.md 第 6 步注入种子
-- `Playwright not found` → UIForge 工具从当前工作目录解析 playwright：先在 `workspace/` 下 `npm i -D playwright && npx playwright install chromium`，并从 `workspace/` 运行抓取命令
+- `Playwright not found` → 确认 playwright 装在 `workspace/common/`；自有脚本自动解析 `cwd/../common`，UIForge 工具需 `NODE_PATH` 指向 common 绝对路径（git-bash 用 `cygpath -w`）
 - 登录后抓取响应数明显偏少 → token 可能过期，重跑 `login-capture.mjs` 刷新 `auth.json`
 - 完成标准：真实浏览器验证渲染正常 + 至少一个页内交互可用（参照 `docs/testing.md` 冒烟清单），并汇报响应数、交互验证结果与局限
 

@@ -4,11 +4,12 @@
 
 场景：目标页面在登录后才渲染真实数据，匿名抓取只能拿到登录页。
 
-1. 写好凭据 `workspace/credentials.json`：`{ "email": "...", "password": "..." }`
-2. 登录并保存会话：`cd workspace && node ../.claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <登录后入口页URL>`（生成 `auth.json`，脚本内会校验密码框是否消失）
-3. 带登录态抓取：
-   `node ../thirdparties/UIForge/tools/uiforge-archive.mjs <url> --out-dir ./archive-x --explore --storage-state ./auth.json`
-4. 启动回放：`cd archive-x && node serve.mjs`
+1. 建站点目录：`mkdir -p workspace/<站点名> && cd workspace/<站点名>`；共享依赖已在 `workspace/common/`（首次见 getting-started）
+2. 检测到登录墙时，**停下来向用户索要账号密码**（禁止猜测或沿用旧凭据，需用户确认），写入本站 `credentials.json`：`{ "email": "...", "password": "..." }`
+3. 登录并保存会话：`node ../../.claude/skills/uiforge-site-clone/scripts/login-capture.mjs --url <登录后入口页URL>`（生成 `auth.json`，脚本内会校验密码框是否消失）
+4. 带登录态抓取（`NODE_PATH` 让工具找到 common 里的 playwright，git-bash 下用 `cygpath -w` 取绝对路径）：
+   `NODE_PATH="$(cygpath -w "$(pwd)/../common")" node ../../thirdparties/UIForge/tools/uiforge-archive.mjs <url> --out-dir ./archive-x --explore --storage-state ./auth.json`
+5. 启动回放：`cd archive-x && node serve.mjs`
 5. 若回放白屏且控制台显示跳转 `login.html` 失败——登录态在 localStorage、回放 origin 没有它。把 `auth.json` 里 `origins[].localStorage` 的键值做成种子脚本注入镜像内入口 HTML（`<body>` 后第一个 `<script>`，循环 `localStorage.setItem`），刷新即恢复登录渲染。
 
 预期结果：离线回放渲染登录后界面，页内交互（选项卡、编辑表单等）可用——跑的是原站真实 JS + 缓存数据。

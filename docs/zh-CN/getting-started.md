@@ -21,10 +21,10 @@ cd webbuild-kb
 git submodule update --init --recursive
 ```
 
-安装抓取沙盒依赖（一次性）：
+安装抓取沙盒共享依赖（一次性，装在 workspace/common/）：
 
 ```bash
-cd workspace
+cd workspace/common
 npm install
 npx playwright install chromium
 ```
@@ -41,7 +41,7 @@ node --version         # >= 18
 用 UIForge 把目标站点捕获为可离线回放的 Archive（以 bishuxiezuo.cn 为例）：
 
 ```bash
-cd workspace
+cd workspace/common
 node ../thirdparties/UIForge/tools/uiforge-archive.mjs https://bishuxiezuo.cn/console/console.html --out-dir ./archive-bishu --explore
 cd archive-bishu && node serve.mjs   # 打印 http://localhost:8787
 ```
