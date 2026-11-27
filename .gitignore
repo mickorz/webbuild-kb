@@ -1,0 +1,19 @@
+# 依赖与构建产物
+node_modules/
+dist/
+
+# macOS
+.DS_Store
+
+# Claude Code 本地配置（不进 git）
+.claude/settings.local.json
+
+# UIForge 抓取沙盒（workspace/）：凭据与抓取产物不入库
+workspace/auth.json
+workspace/credentials.json
+workspace/inject-ls.json
+workspace/archive-*/
+workspace/serve.log
+
+# 说明：dev-docs/、dev-examples/、thirdparties/ 均随仓库入库，不要 ignore。
+# thirdparties/ 下如需排除某个本地只读目录，在此单独追加该目录条目。
