@@ -100,6 +100,8 @@ cmd //c start "" http://localhost:8787/console/console.html   # git-bash 写法�
 
 bishuxiezuo 归档有速启脚本：仓库根 `open.bat`（检查 8787 未占用才启动服务器，然后打开默认浏览器，双击即可用）。
 
+**镜像定制**：回放服务器只服务抓取清单内的文件，新增文件返回 204（详见 `dev-docs/experience/uiforge-replay-serve-manifest-204.md`）。要改样式/行为，修改清单内已有文件：CSS 覆盖追加到 `console.css` 末尾，同时把 `console.html` 里对应 link 的版本参数加后缀（如 `_df44o2`）防浏览器缓存；内联脚本写在 `<body>` 开头。
+
 端口占用或目录删不掉（`Device or resource busy`）→ 上次的 serve.mjs 还在跑：`netstat -ano | grep 8787` 找 PID，`taskkill //F //PID <pid>` 单独处理，**禁止杀全部 node 进程**。
 
 镜像在 `files/` 下按真实 URL 路径存放（真实文件名与扩展名），服务器每次请求读最新文件——改镜像内文本，刷新即生效。
