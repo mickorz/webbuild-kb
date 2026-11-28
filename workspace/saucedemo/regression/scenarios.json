@@ -1,0 +1,44 @@
+{
+  "port": 8840,
+  "scenarios": [
+    {
+      "id": "W01",
+      "name": "登录态与商品列表",
+      "type": "page",
+      "path": "/inventory.html",
+      "settle": 7000,
+      "dom": [
+        {
+          "count": ".inventory_item",
+          "gte": 6
+        },
+        {
+          "text": "Sauce Labs Backpack"
+        }
+      ],
+      "maxConsoleErrors": 1
+    },
+    {
+      "id": "W02",
+      "name": "商品详情页",
+      "type": "page",
+      "path": "/inventory.html",
+      "settle": 7000,
+      "steps": [
+        {
+          "click": ".inventory_item_name",
+          "wait": 4000
+        }
+      ],
+      "dom": [
+        {
+          "sel": ".inventory_details_name"
+        },
+        {
+          "text": "Backpack"
+        }
+      ],
+      "maxConsoleErrors": 1
+    }
+  ]
+}

@@ -40,3 +40,6 @@ dev-examples/**/.run*/
 workspace/*/archive/
 workspace/*/chrome-profile/
 workspace/*/capture.log
+
+# 站点本地存档（saucedemo 等）
+workspace/*/regression/report/evidence/
