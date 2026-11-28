@@ -57,3 +57,7 @@ node capture-steps.mjs --out ./archive-bishu --state ./auth.json \
 
 1. **合并后必须重启 serve.mjs**：它在启动时把 `index.json` 一次性读进内存，新增/变更条目对运行中的实例不可见（表现为新录的接口仍然 404/204）
 2. **步骤抓取不要覆盖入口 HTML 条目**：抓 `/console/console.html` 文档时会把人工定制过的镜像文件（auth-seed 种子、CSS 版本号后缀）换成原始副本 → localStorage 空、跳登录页。`capture-steps.mjs` 已加保护：同名 HTML 文档条目已存在时跳过
+
+### 补充：`GET /api/assistant/sessions/<id>` 也是必需的
+
+从**书架**直接打开助手（未进书）时，前端额外发 `GET /api/assistant/sessions/<id>` 拉会话；这条没录到时回放返回 204 → 即使问候语已渲染，面板顶部仍显示「暂时无法连接创作助手」。补录方式：`capture-steps.mjs --step ".asst-launch"`（不点 `.bc-open`，走书架路径）即可录到。
