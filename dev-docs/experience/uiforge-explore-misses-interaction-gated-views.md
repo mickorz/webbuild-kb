@@ -38,3 +38,22 @@ node capture-steps.mjs --out ./archive-bishu --state ./auth.json \
 - 抓完先查 `index.json` 里的 API 状态分布，出现 401 说明登录态没生效，别急着排查前端
 - 判断「某功能没复刻」的顺序：先看 API 状态码 → 再看是否需要多步导航 → 最后才怀疑代码缺失
 - 步骤抓取脚本要复用同一份 `storageState`，否则跨会话状态不一致
+
+## 补充（2026-11-28）：页面助手复刻
+
+助手面板要复刻出「问候语 + 功能栏 + 输入框」，必须录到三样东西：
+
+| 接口 | 作用 |
+|---|---|
+| `GET /api/assistant/capabilities` | `runtime.status` 决定面板显示内容还是「暂时无法连接创作助手」。必须为 `configured` |
+| `POST /api/assistant/sessions` | 创建会话，返回会话 UUID |
+| `GET /api/assistant/sessions/<id>/welcome` | 首条问候消息正文 |
+
+要点：
+- `capabilities.runtime.status` 是**服务端实时状态**，会 transient 变成 `unavailable`。第一次补录就撞上了，录进 `unavailable` → 回放仍报错；隔几分钟重录即得 `configured`
+- 会话 UUID 是每次抓取新建的；回放的 201 响应里带同一 UUID，后续 `/welcome` 等按该 UUID 匹配，能对上
+
+## 两个操作坑
+
+1. **合并后必须重启 serve.mjs**：它在启动时把 `index.json` 一次性读进内存，新增/变更条目对运行中的实例不可见（表现为新录的接口仍然 404/204）
+2. **步骤抓取不要覆盖入口 HTML 条目**：抓 `/console/console.html` 文档时会把人工定制过的镜像文件（auth-seed 种子、CSS 版本号后缀）换成原始副本 → localStorage 空、跳登录页。`capture-steps.mjs` 已加保护：同名 HTML 文档条目已存在时跳过

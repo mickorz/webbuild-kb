@@ -102,6 +102,9 @@ await browser.close()
 let added = 0
 for (const [key, r] of rec) {
   const ct = r.headers['content-type'] || ''
+  // 已有同名 HTML 文档条目时跳过：镜像里的入口 HTML 可能已被人工定制（登录种子 / 样式版本号），
+  // 不能用抓到的原始副本覆盖它
+  if (ct.includes('html') && byKey.has(key)) continue
   const ext = extFromCt(ct)
   let path = ''
   try { path = new URL(r.url).pathname } catch { path = '/' + hash(r.url) }
