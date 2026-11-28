@@ -1,9 +1,0 @@
-
-  [1mUIForge archive[0m [2m← https://www.gameuidatabase.com/[0m
-    [36mexploring[0m [2m(warming cache: scroll + in-page controls)…[0m
-    [36mrecorded[0m   [32m117[0m responses [2m(scripts, css, 12 data/API payloads, fonts, images)[0m
-    [36mmirror[0m     [32mE:/WorkProjects/webbuild-kb/workspace/gameuidatabase/archive/files/[0m  [2mbrowsable + editable (real filenames/exts; edit a text file → replay reflects it)[0m
-    [36mreplay[0m     [32mE:/WorkProjects/webbuild-kb/workspace/gameuidatabase/archive/[0m  [2m→ node serve.mjs[0m
-
-    [2mcd E:/WorkProjects/webbuild-kb/workspace/gameuidatabase/archive && node serve.mjs[0m   [2m(want an editable React copy instead? use Restore: /uiforge:clone --restore)[0m
-

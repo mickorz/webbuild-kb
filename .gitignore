@@ -35,3 +35,8 @@ workspace/*/regression/report/coverage-*.json
 dev-examples/**/tmp*/
 
 dev-examples/**/.run*/
+
+# 抓取产物与浏览器 profile（workspace/<站点>/archive 与 chrome-profile 属运行产物，本地保留不入库）
+workspace/*/archive/
+workspace/*/chrome-profile/
+workspace/*/capture.log
