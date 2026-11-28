@@ -56,29 +56,58 @@ await page.click('.bc-open', { force: true }); await page.waitForTimeout(4500)
 await page.click('[title="世界"]', { force: true }); await page.waitForTimeout(4000)
 await collect('世界总览')
 
-// 维度详情
-await clickText('信息传播'); await collect('世界 · 维度详情')
-
-// 进向导
-console.log('  → 尝试进入向导')
-await page.click('[title="世界"]', { force: true }); await page.waitForTimeout(3000)
-await clickText('重新编辑世界观', 2000)
-await clickText('进入编辑', 5000)
+// 先进向导（顺序反了会停在维度详情回不去）
+await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => (x.textContent || '').includes('重新编辑世界观')); b && b.click() })
+await page.waitForTimeout(2500)
+await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => (x.textContent || '').trim() === '进入编辑'); b && b.click() })
+await page.waitForTimeout(6000)
 await collect('向导 · 世界观')
 
-// 向导各步：点左侧分组 + 下一步
 for (const tab of ['角色表', '故事规划', '世界观']) {
-  const ok = await clickText(tab, 3000)
-  await collect(`向导 · ${tab}${ok ? '' : '(未找到)'}`)
+  const ok = await clickText(tab, 3500)
+  if (ok) await collect(`向导 · ${tab}`)
 }
 
-for (let i = 1; i <= 4; i++) {
-  const ok = await clickText('通过，下一步', 4000)
-  if (!ok) break
-  await collect(`向导 · 下一步${i}`)
-  // 顺带点一次「编辑」拿编辑态
-  if (await clickText('编辑', 2500)) await collect(`向导 · 下一步${i} · 编辑态`)
+await clickText('角色表', 3500)
+for (const who of ['陈烬', '霍天枢', '红绫', '鬼医']) {
+  if (await clickText(who, 2500)) await collect(`向导 · 角色表 · ${who}`)
 }
+for (let i = 1; i <= 3; i++) {
+  if (!(await clickText('通过，下一步', 4000))) break
+  await collect(`向导 · 角色表 第${i}步`)
+  if (await clickText('编辑', 2500)) await collect(`向导 · 角色表 第${i}步 · 编辑态`)
+}
+
+// 维度详情单独一趟（用新页面，避免上一趟的书内状态影响）
+try {
+  const p2 = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  await p2.goto('http://localhost:8787/console/console.html', { waitUntil: 'domcontentloaded' })
+  await p2.waitForTimeout(4000)
+  await p2.click('.bc-open', { force: true }); await p2.waitForTimeout(4500)
+  await p2.click('[title="世界"]', { force: true }); await p2.waitForTimeout(4000)
+  const clickOn = async (pg, t) => pg.evaluate(text => {
+    const els = [...document.querySelectorAll('button,[role=button],span,li')]
+    const el = els.find(x => (x.textContent || '').trim() === text) || els.find(x => (x.textContent || '').includes(text))
+    if (el) { el.click(); return true }
+    return false
+  }, t)
+  await clickOn(p2, '信息传播'); await p2.waitForTimeout(4000)
+  const cards = await p2.evaluate(() => {
+    const isCard = e => /c-content-panel|c-relationship-map|cs-document-list/.test((e.className || '').toString())
+    return [...document.querySelectorAll('div,section,article')].filter(isCard)
+      .filter(e => !e.parentElement || !isCard(e.parentElement))
+      .map(e => ({ html: e.outerHTML, cls: (e.className || '').toString() }))
+  })
+  for (const c of cards) {
+    const clsKey = c.cls.split(/\s+/).filter(Boolean).sort().join(' ')
+    const actions = [...new Set(c.html.match(/c-content-action (edit|utility|primary)/g) || [])].sort().join(',')
+    const sig = `${clsKey}||${actions}`
+    if (!found.has(sig)) {
+      found.set(sig, { sig, clsKey, actions, bodyKind: ['c-structured-list','c-titled-text','cs-document-list','c-relationship-map'].find(k => c.cls.includes(k)) || 'other', editable: /cr-wbe|c-editable-surface/.test(c.cls), html: c.html, screen: '世界 · 维度详情' })
+    }
+  }
+  console.log(`  [世界 · 维度详情] 卡片=${cards.length} 累计=${found.size}`)
+} catch (e) { console.log('  维度详情采集跳过:', e.message.slice(0, 60)) }
 
 const items = [...found.values()]
 console.log(`\n共 ${items.length} 种卡片形态:`)
