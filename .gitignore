@@ -24,3 +24,8 @@ workspace/*/serve.log
 # 说明：dev-docs/、dev-examples/、thirdparties/ 均随仓库入库，不要 ignore。
 # thirdparties/ 下如需排除某个本地只读目录，在此单独追加该目录条目。
 dev-examples/*/tmp/
+
+# 回放回归运行产物（报告 md 入库，证据与临时副本不入库）
+workspace/*/regression/.run/
+workspace/*/regression/report/evidence/
+workspace/*/regression/report/coverage-*.json

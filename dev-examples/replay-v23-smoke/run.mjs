@@ -33,6 +33,8 @@ put('GET', '/api/broken', 500, { v: 'boom' })
 put('POST', '/api/echo', 200, { v: 'echo-empty' }, '#' + emptyHash, '{}')
 put('POST', '/api/session', 200, { n: 1 }, '#' + emptyHash, '{}')           // 同签名版本 1
 put('POST', '/api/session', 200, { n: 2 }, '#' + emptyHash, '{}')           // 同签名版本 2
+put('POST', '/api/session2', 200, { n: 101 }, '#' + emptyHash, '{}')        // 并发专用: 未消费的双版本签名
+put('POST', '/api/session2', 200, { n: 102 }, '#' + emptyHash, '{}')
 put('GET', '/api/state', 200, { n: 1 })                                     // 同 GET 不同业务状态
 put('GET', '/api/state', 200, { n: 2 })
 put('POST', '/api/upload', 200, { v: 'uploaded' })                          // 旧格式无指纹条目
@@ -59,6 +61,12 @@ try {
   assert(J(r.text)?.n === 2, 'T1 FIFO 第2次消费版本2', r.text)
   r = await post('/api/session', '{}')
   assert(J(r.text)?.n === 2, 'T1 FIFO 超出后停在最后一版', r.text)
+
+  // 并发相同签名请求: FIFO 顺序仍确定（pick 同步执行，按请求完成顺序各消费一次，无重复无跳版）
+  // 用全新的双版本签名 session2（此前未消费），并发 4 次: 期望两个版本各消费一次后钳位
+  const many = await Promise.all(Array.from({ length: 4 }, () => post('/api/session2', '{}')))
+  const ns = many.map(x => J(x.text)?.n).sort((a, b) => a - b)
+  assert(JSON.stringify(ns) === '[101,102,102,102]', 'T1 并发 4 次消费结果确定（无重复无跳版）', JSON.stringify(ns))
 
   r = await req2('/api/state'); assert(J(r.text)?.n === 1, 'T1 GET FIFO 版本1', r.text)
   r = await req2('/api/state'); assert(J(r.text)?.n === 2, 'T1 GET FIFO 版本2', r.text)

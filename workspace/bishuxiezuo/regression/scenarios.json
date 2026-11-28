@@ -1,0 +1,93 @@
+{
+  "port": 8795,
+  "scenarios": [
+    {
+      "id": "S01",
+      "name": "入口与控制台初始化",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 6000,
+      "dom": [{ "sel": ".bc-open" }],
+      "api": [
+        { "method": "GET", "path": "/api/auth/me", "status": 200, "fields": { "id": "present", "email": "present" } },
+        { "method": "GET", "path": "/api/books", "status": 200 }
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "书架数据与书籍列表",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 6000,
+      "dom": [{ "text": "全球高武" }],
+      "api": [
+        { "method": "GET", "path": "/api/books", "status": 200, "fields": { "[0].title": "全球高武", "[0].id": "2de6cf8f-9b82-4edd-92d1-e0b6611546ec" } }
+      ]
+    },
+    {
+      "id": "S03",
+      "name": "世界观总览与维度详情",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 5000,
+      "steps": [
+        { "click": ".bc-open", "wait": 4500 },
+        { "click": "[title=\"世界\"]", "wait": 4000 }
+      ],
+      "dom": [{ "text": "重新编辑世界观" }],
+      "api": [
+        { "method": "GET", "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world", "status": 200 }
+      ]
+    },
+    {
+      "id": "S04",
+      "name": "四步向导进入编辑",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 5000,
+      "steps": [
+        { "click": ".bc-open", "wait": 4500 },
+        { "click": "[title=\"世界\"]", "wait": 4000 },
+        { "clickText": "重新编辑世界观", "wait": 4000 },
+        { "clickText": "进入编辑", "wait": 4000 }
+      ],
+      "dom": [
+        { "sel": ".cr-shell" },
+        { "count": "[class*=\"cr-wbe\"]", "gte": 1 }
+      ]
+    },
+    {
+      "id": "S05",
+      "name": "书架助手与会话创建",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 5000,
+      "steps": [
+        { "click": ".asst-launch", "wait": 5000 }
+      ],
+      "dom": [{ "text": "笔枢助手" }],
+      "api": [
+        { "method": "POST", "path": "/api/assistant/sessions", "status": 201, "fields": { "id": "present", "messages[0].content": "contains:笔枢助手" } }
+      ]
+    },
+    {
+      "id": "S06",
+      "name": "并发相同签名请求 FIFO 确定性",
+      "type": "api",
+      "requests": [
+        { "name": "并发6次创建会话（单版本钳位）", "method": "POST", "path": "/api/assistant/sessions", "body": "{}", "concurrent": 6, "expect": { "status": 201, "allSameBody": true } }
+      ]
+    },
+    {
+      "id": "S07",
+      "name": "未录制与歧义请求诊断",
+      "type": "api",
+      "requests": [
+        { "name": "POST未录制端点", "method": "POST", "path": "/api/definitely-missing", "body": "{\"x\":1}", "expect": { "status": 599 } },
+        { "name": "GET未录制端点", "method": "GET", "path": "/api/definitely-missing", "expect": { "status": 599 } },
+        { "name": "sessions歧义body拒绝", "method": "POST", "path": "/api/assistant/sessions", "body": "{\"x\":1}", "expect": { "status": 599 } }
+      ],
+      "expectKinds": ["unmatched", "ambiguous-body-variant"]
+    }
+  ]
+}
