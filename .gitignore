@@ -43,3 +43,6 @@ workspace/*/capture.log
 
 # 站点本地存档（saucedemo 等）
 workspace/*/regression/report/evidence/
+
+# 回放截图属运行产物（差异证据在报告里文字记录）
+workspace/*/*.png
