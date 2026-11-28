@@ -144,13 +144,29 @@ for (const sc of conf.scenarios) {
     })
     try {
       await page.goto(base + (sc.path || '/'), { waitUntil: 'domcontentloaded', timeout: 30000 })
+      if (sc.lsSeed) {
+        // 写入 localStorage 种子并重载（如 lf_selected_book 直接进指定书籍，绕开列表 FIFO 起点问题）
+        for (const [k, v] of Object.entries(sc.lsSeed)) await page.evaluate(([k, v]) => localStorage.setItem(k, v), [k, v])
+        await page.reload({ waitUntil: 'domcontentloaded' })
+      }
       await page.waitForTimeout(sc.settle || 6000)
       let stepFails = 0
       for (const st of sc.steps || []) {
         const wait = st.wait || 3000
-        let ok = false, how = st.click || st.clickText || (st.fill !== undefined ? 'fill ' + st.fill + '=' + st.value : '')
+        let ok = false, how = st.click || st.clickText || st.clickCard || (st.fill !== undefined ? 'fill ' + st.fill + '=' + st.value : '')
         try {
-          if (st.fill !== undefined) {
+          if (st.clickCard) {
+            // 进书：按卡片文本定位 .bc-open（hover 后才出现），走真实鼠标坐标
+            const pos = await page.evaluate(t => {
+              for (const b of document.querySelectorAll('.bc-open')) {
+                let el = b
+                for (let i = 0; i < 8 && el; i++) { el = el.parentElement; if (el && (el.textContent || '').includes(t)) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } } }
+              }
+              return null
+            }, st.clickCard)
+            if (pos) { await page.mouse.move(pos.x, pos.y); await page.waitForTimeout(900); await page.mouse.click(pos.x, pos.y); ok = true }
+          }
+          else if (st.fill !== undefined) {
             const loc = page.locator(st.fill).first()
             await loc.fill(st.value || '', { timeout: 15000 })
             if (st.enter) await loc.press('Enter')

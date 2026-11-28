@@ -1,0 +1,35 @@
+{
+  "book": {
+    "id": "a9379563-e534-4ed3-8996-78b31b1d1bb0",
+    "title": "WBTEST-E02",
+    "engine_book_id": "dede42f1-4fa5-4ea4-bc0d-7b62ed70b68c",
+    "note": "通过 UI「新建作品 → 铸造一个世界」创建；铸造任务 ede1a766-b7b6-48db-af5c-d851404a637e (world_build) 已完成"
+  },
+  "world": {
+    "status": "ready",
+    "dimension_groups": {
+      "core_law": { "label": "核心法则", "count": 4, "agent": "世界观架构师" },
+      "space_time_geo": { "label": "时空地理", "count": 5, "agent": "地理志官" },
+      "social_power": { "label": "社会权力", "count": 6, "agent": "设定考据员" },
+      "history_culture": { "label": "历史文化", "count": 5, "agent": "设定考据员" },
+      "existence": { "label": "存在基础", "count": 4, "agent": "世界观架构师" },
+      "info_spread": { "label": "信息传播", "count": 4, "agent": "信息志官" }
+    },
+    "first_block_original": "真相需付费存储，谎言在断层中增殖，唯有石碑低语穿透迷雾。",
+    "edited_path": "essence",
+    "edited_value": "WBTEST-测试编辑内容v1"
+  },
+  "operations": [
+    { "step": "1", "action": "点维度区块「编辑」(.cr-wbe-edit)", "result": "出现 TEXTAREA .se-ta，值=原文本" },
+    { "step": "2", "action": "fill .se-ta = WBTEST-测试编辑内容v1，点「完成」", "result": "PUT /api/books/<id>/world/information 200（base_version=1, path=essence）→ 线上持久化已确认" },
+    { "step": "3", "action": "reload 后再次编辑 → 改为 WBTEST-取消测试内容 → key Escape", "result": "未发 PUT；reload 后线上仍为 v1 → 取消生效已确认" }
+  ],
+  "write_apis": [
+    { "api": "PUT /api/books/<id>/world/information", "body_shape": "{ base_version, path, value, reason }", "note": "乐观并发控制；不同维度 = 同 URL 不同 body（请求体变体的典型场景）" },
+    { "api": "POST /api/books/<id>/task-quote", "body_shape": "{ task_type: 'world_build' }" }
+  ],
+  "state": {
+    "current": "world.essence = WBTEST-测试编辑内容v1（已持久化）",
+    "restore": "重新编辑并改回 first_block_original 即可还原；或删除测试书籍"
+  }
+}

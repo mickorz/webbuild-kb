@@ -1,0 +1,48 @@
+{
+  "capturedAt": "2026-11-28T08:03:33.046Z",
+  "bookId": "a9379563-e534-4ed3-8996-78b31b1d1bb0",
+  "endpoints": {
+    "<B>/world": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world.eaee7cd299fe.json",
+      "reqBody": null
+    },
+    "<B>/world/core_laws": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/core_laws.9cb0646748ee.json",
+      "reqBody": null
+    },
+    "<B>/world/space_time": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/space_time.e3429fbec0be.json",
+      "reqBody": null
+    },
+    "<B>/world/society": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/society.28b2aa712bd0.json",
+      "reqBody": null
+    },
+    "<B>/world/history_culture": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/history_culture.1409a5824e98.json",
+      "reqBody": null
+    },
+    "<B>/world/existence": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/existence.0d8cf29e2c74.json",
+      "reqBody": null
+    },
+    "<B>/world/information": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/information.c73a945d5922.json",
+      "reqBody": null
+    }
+  }
+}

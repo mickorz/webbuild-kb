@@ -1,0 +1,31 @@
+{
+  "capturedAt": "2026-11-28T08:08:50.340Z",
+  "bookId": "a9379563-e534-4ed3-8996-78b31b1d1bb0",
+  "endpoints": {
+    "<B>/characters": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters.1b99be32a7e5.json"
+    },
+    "<B>/characters/%E6%B2%88%E7%A1%AE": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters/_E6_B2_88_E7_A1_AE.cf8685a33b4c.json"
+    },
+    "<B>/characters/%E5%AE%88%E5%A2%93%E4%BA%BA": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters/_E5_AE_88_E5_A2_93_E4_BA_BA.485a4ac21d1c.json"
+    },
+    "<B>/characters/%E7%99%BD%E8%8A%B7": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters/_E7_99_BD_E8_8A_B7.b7b9c771f06c.json"
+    },
+    "<B>/characters/%E9%99%86%E5%B0%98": {
+      "method": "GET",
+      "status": 200,
+      "file": "_steps/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters/_E9_99_86_E5_B0_98.85c4bc0a1695.json"
+    }
+  }
+}

@@ -7,7 +7,11 @@
 //
 // --step 值以 . [ # 开头按 CSS 选择器处理，否则按按钮文本匹配（trim 相等优先，其次包含）。
 // 输入步骤：--step "fill:.search=关键词" 只填充不回车；--step "fillenter:.search=关键词" 填充后回车（搜索类操作）
+// 等待步骤：--step "wait:20000" 原地等待（长耗时操作如 AI 铸造生成，保持浏览器开启以持续录制）
+// 其他原语：--step "reload:8000" 重载页面（验证持久化）；--step "key:Escape" 按键（取消编辑场景）；
+//           --step "clickcard:WBTEST-E02" 进书（按卡片文本定位 .bc-open，需先 hover 才出现）
 // 交互补采：加 --interactive 用有头浏览器人工操作目标功能，回终端按 Enter 结束录制（此时无需 --step）。
+// 指定书籍：--ls lf_selected_book=<bookId> 页面加载后写入 localStorage 并重载（SPA 的当前书籍选中态存在这里）
 // 合并规则：同 key（METHOD + 归一化URL + 请求体指纹）的多响应全保留（回放按 FIFO 消费），相同响应体去重；
 // 文件按响应内容哈希写入 _steps/，多版本不互相覆盖。
 // 同 URL 不同请求体对应不同页面状态，key 里带完整请求体 sha256 前 12 位区分。
@@ -34,6 +38,7 @@ const url = val('--url')
 const steps = vals('--step')
 const stepWait = Number(val('--wait') || 3000)
 const interactive = argv.includes('--interactive')
+const lsSeed = vals('--ls').map(kv => { const i = kv.indexOf('='); return [kv.slice(0, i), kv.slice(i + 1)] })
 if (!url || (!steps.length && !interactive)) { console.error('需要 --url，以及至少一个 --step 或 --interactive'); process.exit(1) }
 if (interactive && !process.stdin.isTTY) { console.error('--interactive 需要在终端里人工操作，stdin 不是 TTY'); process.exit(1) }
 if (!existsSync(join(outDir, 'index.json'))) { console.error('目标归档不存在:', outDir); process.exit(1) }
@@ -91,12 +96,57 @@ page.on('response', async r => {
 console.log('打开', url)
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(4000)
+if (lsSeed.length) {
+  for (const [k, v] of lsSeed) await page.evaluate(([k, v]) => localStorage.setItem(k, v), [k, v])
+  console.log('  ls 种子已写入并重载:', lsSeed.map(([k]) => k).join(','))
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(7000)
+}
 
 if (interactive) {
   console.log('交互模式：在浏览器里手动操作目标功能，完成后回到终端按 Enter 结束录制')
   await new Promise(res => { const rl = createInterface({ input: process.stdin, output: process.stdout }); rl.question('', () => { rl.close(); res() }) })
 }
 else for (const step of steps) {
+  if (step.startsWith('wait:')) {
+    const ms = Number(step.slice(5)) || 5000
+    console.log(`  wait ${ms}ms`)
+    await page.waitForTimeout(ms)
+    continue
+  }
+  if (step.startsWith('reload:')) {
+    const ms = Number(step.slice(7)) || 8000
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(ms)
+    console.log(`  ok   reload (wait ${ms}ms)`)
+    continue
+  }
+  if (step.startsWith('key:')) {
+    const k = step.slice(4)
+    let ok = false
+    try { await page.keyboard.press(k); ok = true } catch {}
+    console.log(`  ${ok ? 'ok  ' : 'MISS'} key ${k}`)
+    await page.waitForTimeout(stepWait)
+    continue
+  }
+  if (step.startsWith('clickcard:')) {
+    const title = step.slice(10)
+    const pos = await page.evaluate(t => {
+      for (const b of document.querySelectorAll('.bc-open')) {
+        let el = b
+        for (let i = 0; i < 8 && el; i++) {
+          el = el.parentElement
+          if (el && (el.textContent || '').includes(t)) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
+        }
+      }
+      return null
+    }, title)
+    let ok = false
+    if (pos) { await page.mouse.move(pos.x, pos.y); await page.waitForTimeout(900); await page.mouse.click(pos.x, pos.y); ok = true }
+    console.log(`  ${ok ? 'ok  ' : 'MISS'} clickcard ${title}`)
+    await page.waitForTimeout(stepWait)
+    continue
+  }
   if (step.startsWith('fill:') || step.startsWith('fillenter:')) {
     const spec = step.slice(step.indexOf(':') + 1)
     const i = spec.lastIndexOf('=')   // 属性选择器内含 =（如 input[type=search]），按最后一个 = 拆分

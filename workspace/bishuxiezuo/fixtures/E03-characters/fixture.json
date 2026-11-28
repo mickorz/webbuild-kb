@@ -1,0 +1,34 @@
+{
+  "book": {
+    "id": "a9379563-e534-4ed3-8996-78b31b1d1bb0",
+    "title": "WBTEST-E02",
+    "note": "E03 复用了 E02 的测试书籍（铸造的 world_build 已产出世界观+角色表），未额外铸造第二本书——铸造是 AI 消耗，用户明确要求不做不必要的 AI 生成。实体隔离靠 WBTEST- 前缀"
+  },
+  "characters": {
+    "source": "铸造向导第 3 步「角色表」AI 批量生成（segments ①②③）",
+    "generated": [
+      { "name": "沈确", "detail_api": "GET /api/books/<id>/characters/沈确" },
+      { "name": "守墓人", "detail_api": "GET /api/books/<id>/characters/守墓人" },
+      { "name": "白芷", "detail_api": "GET /api/books/<id>/characters/白芷" },
+      { "name": "陆尘", "detail_api": "GET /api/books/<id>/characters/陆尘" }
+    ],
+    "wbtest_named": [],
+    "relations": [],
+    "status": "未完成：自建 WBTEST- 角色与关系未创建（见下文 blocked_reason）"
+  },
+  "operations": [
+    { "step": "1", "action": "进书 → 「通过，下一步」（世界观→角色表）", "result": "触发角色批量生成（阵容骨架/信念生态/深层维度），后台任务进行中" },
+    { "step": "2", "action": "等待 90s 采集生成过程", "result": "角色列表 + 4 个角色详情 API 入库；流式端点 body 不可读（87 条 response-body-unreadable 留痕）" },
+    { "step": "3", "action": "再次「通过，下一步」→ 故事规划", "result": "又触发故事引擎 AI 任务；角色表被标记 ✓，向导锁定在第 3 段" },
+    { "step": "4", "action": "点步骤导航「角色表」(.cr-stepi.done)", "result": "无效——已通过的步骤不可回退，.cr-wbe 区块为 0，无编辑入口" }
+  ],
+  "blocked_reason": "角色编辑/新建/关系管理入口在「向导完成（世界就位）」之后的正式 console 角色界面，当前向导仍在故事规划阶段。继续推进会不断触发 AI 生成（消耗额度），故停止。",
+  "next_steps": [
+    "等向导完成（或用户确认可继续消耗额度推进到「世界就位」）后，进入正式 console 的「人物」侧栏采集角色新增/编辑/关系",
+    "届时补采 WBTEST-主角 / WBTEST-配角A / WBTEST-配角B 与两条关系"
+  ],
+  "state": {
+    "current": "角色表为 AI 生成内容（4 角色），未做任何修改；无 WBTEST- 前缀自建实体",
+    "pollution_risk": "无（未修改真实书籍《全球高武》，测试书内数据均为铸造生成）"
+  }
+}

@@ -181,16 +181,125 @@
       "path": "/console/console.html",
       "settle": 6000,
       "steps": [
-        { "fill": "input[type=search]", "value": "全球", "enter": true, "wait": 2000, "expectText": "全球高武" },
-        { "fill": "input[type=search]", "value": "zzz不存在的书名", "enter": true, "wait": 2500, "expectText": "全球高武" },
-        { "fill": "input[type=search]", "value": "", "enter": true, "wait": 1500, "expectText": "全球高武" },
-        { "click": ".bc-open", "wait": 6000 }
+        {
+          "fill": "input[type=search]",
+          "value": "全球",
+          "enter": true,
+          "wait": 2000,
+          "expectText": "全球高武"
+        },
+        {
+          "fill": "input[type=search]",
+          "value": "zzz不存在的书名",
+          "enter": true,
+          "wait": 2500,
+          "expectText": "全球高武"
+        },
+        {
+          "fill": "input[type=search]",
+          "value": "",
+          "enter": true,
+          "wait": 1500,
+          "expectText": "全球高武"
+        },
+        {
+          "click": ".bc-open",
+          "wait": 6000
+        }
       ],
       "api": [
-        { "method": "GET", "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters", "status": 200 },
-        { "method": "GET", "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/characters", "status": 200 }
+        {
+          "method": "GET",
+          "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/characters",
+          "status": 200
+        }
       ],
-      "expectedFallbacks": [{ "kind": "query-variant-fallback", "path": "/console/console.css" }]
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "name": "世界观维度与角色数据（内容级）",
+      "type": "api",
+      "requests": [
+        {
+          "name": "world 详情",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world",
+          "expect": {
+            "status": 200,
+            "fields": {
+              "status": "present",
+              "engine_book_id": "present",
+              "dimensions": "present"
+            }
+          }
+        },
+        {
+          "name": "world 存在基础维度",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/existence",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "name": "world 核心法则维度",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/core_laws",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "name": "角色列表",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters",
+          "expect": {
+            "status": 200
+          }
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "name": "角色列表与角色详情（只读）",
+      "type": "api",
+      "requests": [
+        {
+          "name": "角色列表",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "name": "角色详情-沈确",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters/%E6%B2%88%E7%A1%AE",
+          "expect": {
+            "status": 200
+          }
+        },
+        {
+          "name": "角色详情-白芷",
+          "method": "GET",
+          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters/%E7%99%BD%E8%8A%B7",
+          "expect": {
+            "status": 200
+          }
+        }
+      ]
     },
     {
       "id": "S06",
