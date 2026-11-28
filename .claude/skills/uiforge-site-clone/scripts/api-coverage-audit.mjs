@@ -13,6 +13,7 @@
 //   5 归档文件缺失: 条目指向的 files/ 文件在磁盘上不存在
 //   6 采集丢弃: capture-failures.jsonl 汇总（响应体不可读 / 超限 / handler 异常）
 //   7 --extra 对比: 另一份采集里存在而本归档没有的端点（漏采清单）
+//   8 回放未命中: unmatched-requests.jsonl 汇总（serve v2 运行时产生，含变体回退留痕，即补采任务清单）
 //
 // 输出: 控制台摘要 + markdown 报告。退出码: 0 正常 / 1 归档不存在
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -78,6 +79,14 @@ if (extraArg && existsSync(extraArg)) {
     if (!have.has(gk) && !seen.has(gk)) { seen.add(gk); extraMissing.push(gk) }
   }
 }
+
+// 8 回放未命中记录（serve v2 运行时产生）
+const unmatchedFile = join(archiveDir, 'unmatched-requests.jsonl')
+const unmatched = existsSync(unmatchedFile)
+  ? readFileSync(unmatchedFile, 'utf8').split('\n').filter(Boolean).map(l => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean)
+  : []
+const unByKind = {}
+for (const u of unmatched) unByKind[u.kind] = (unByKind[u.kind] || 0) + 1
 
 const fmtStatuses = g => [...new Set(g.items.map(e => e.status))].join('/')
 const md = []
@@ -147,6 +156,21 @@ if (fails.length) {
   for (const u of urls) md.push(`- ${u}`)
 } else md.push('无 capture-failures.jsonl（本归档采集时未产生丢弃记录，或采集于该机制引入之前）')
 md.push('')
+md.push('## 回放未命中记录（serve v2）')
+md.push('')
+if (unmatched.length) {
+  md.push(`来源: unmatched-requests.jsonl，共 ${unmatched.length} 条（回放期真实请求，即补采任务清单）`)
+  md.push('')
+  md.push('| kind | 数量 |')
+  md.push('|------|------|')
+  for (const [k, n] of Object.entries(unByKind)) md.push(`| ${k} | ${n} |`)
+  md.push('')
+  const ulist = [...new Set(unmatched.map(u => (u.kind === 'body-variant-fallback' ? '[回退留痕] ' : '') + u.method + ' ' + u.url + (u.bodyHash ? ' body=' + u.bodyHash : '')))]
+  md.push('涉及请求:')
+  md.push('')
+  for (const u of ulist) md.push(`- ${u}`)
+} else md.push('无（未运行过 serve v2 回放，或回放全命中）')
+md.push('')
 md.push('## 补采对比缺失（--extra）')
 md.push('')
 if (extraMissing.length) {
@@ -160,5 +184,5 @@ md.push('')
 mkdirSync(resolve(outPath, '..'), { recursive: true })
 writeFileSync(outPath, md.join('\n'))
 
-console.log(`端点 ${apiGroups.length} | API条目 ${apiGroups.reduce((a, g) => a + g.items.length, 0)} | 异常状态 ${badStatus.length} | 变体冲突 ${variants.length} | POST缺请求体 ${noReqBody.length} | 文件缺失 ${missingFiles.length} | 丢弃 ${fails.length}${extraArg ? ` | 补采缺失 ${extraMissing.length}` : ''}`)
+console.log(`端点 ${apiGroups.length} | API条目 ${apiGroups.reduce((a, g) => a + g.items.length, 0)} | 异常状态 ${badStatus.length} | 变体冲突 ${variants.length} | POST缺请求体 ${noReqBody.length} | 文件缺失 ${missingFiles.length} | 丢弃 ${fails.length} | 回放未命中 ${unmatched.length}${extraArg ? ` | 补采缺失 ${extraMissing.length}` : ''}`)
 console.log('报告:', outPath)

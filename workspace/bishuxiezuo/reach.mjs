@@ -1,0 +1,22 @@
+import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
+const req = createRequire(new URL('../common/package.json', import.meta.url).href)
+const pw = await import(pathToFileURL(req.resolve('playwright')).href)
+const chromium = pw.chromium ?? pw.default.chromium
+const browser = await chromium.launch()
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+await page.goto('http://localhost:8787/console/console.html', { waitUntil: 'domcontentloaded' })
+await page.waitForTimeout(3500)
+await page.click('.bc-open', { force: true }); await page.waitForTimeout(4500)
+await page.click('[title="世界"]', { force: true }); await page.waitForTimeout(4000)
+const btns = await page.evaluate(() => [...document.querySelectorAll('button')].map(b => (b.textContent || '').trim()).filter(Boolean).slice(0, 20))
+console.log('世界屏按钮:', JSON.stringify(btns))
+const ok1 = await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => (x.textContent||'').includes('重新编辑世界观')); if(!b) return false; b.click(); return true })
+await page.waitForTimeout(2500)
+const dlg = await page.evaluate(() => [...document.querySelectorAll('button')].map(b => (b.textContent||'').trim()).filter(t => /进入编辑|取消/.test(t)))
+console.log('弹窗按钮:', JSON.stringify(dlg), '| 点重新编辑:', ok1)
+const ok2 = await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => (x.textContent||'').trim() === '进入编辑'); if(!b) return false; b.click(); return true })
+await page.waitForTimeout(6000)
+console.log('点进入编辑:', ok2, '| 视图:', await page.evaluate(() => document.querySelector('.runtime-admission-content')?.firstElementChild?.className))
+console.log('牌组侧栏:', JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('.cr-gennav *, .cr-gennav button')].map(e => (e.textContent||'').trim()).filter(Boolean).slice(0, 12))))
+await browser.close()

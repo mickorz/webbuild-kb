@@ -1,6 +1,6 @@
 ---
 name: uiforge-site-clone
-version: 1.3.0
+version: 1.3.1
 display_name: 网站复刻抓取
 display_name_en: UIForge Site Clone
 description: >
@@ -98,10 +98,14 @@ node ./capture-steps.mjs --out ./archive-<站点名> --state ./auth.json \
 
 # 丢弃/失败会落盘 capture-failures.jsonl，不再静默
 
-# 审计：端点清点、异常状态、变体冲突、POST 缺请求体、文件缺失、丢弃统计
+# 审计：端点清点、异常状态、变体冲突、POST 缺请求体、文件缺失、丢弃统计、回放未命中
 node ../../.claude/skills/uiforge-site-clone/scripts/api-coverage-audit.mjs \
   --archive ./archive-<站点名> [--extra <补采归档>/index.json]
-# 输出 api-coverage-report.md；判读顺序：先看 401/404（登录态）→ 变体冲突（覆盖历史）→ POST 缺请求体（旧格式）
+# 输出 api-coverage-report.md；判读顺序：先看 401/404（登录态）→ 变体冲突（覆盖历史）→ POST 缺请求体（旧格式）→ 回放未命中（补采任务）
+
+# 回放升级：请求体感知匹配 + 未命中 599/204 可配 + unmatched-requests.jsonl（写入归档，v1 备份为 serve.mjs.orig，重启生效）
+node ../../.claude/skills/uiforge-site-clone/scripts/upgrade-replay-serve.mjs --archive ./archive-<站点名>
+# 回放期缺 API 会实时落盘 unmatched-requests.jsonl（含变体回退留痕），重跑审计即进报告
 ```
 
 ## Error Policy

@@ -1,9 +1,9 @@
 # API 覆盖率审计报告
 
 - 归档: E:\WorkProjects\webbuild-kb\workspace\bishuxiezuo\archive-bishu
-- 时间: 2026-11-28T03:35:48.337Z
-- 总条目 338，API 条目 44，去重 API 端点 41
-- API 状态分布: {"200":39,"201":1,"202":1,"204":1,"404":2}
+- 时间: 2026-11-28T03:43:54.471Z
+- 总条目 340，API 条目 46，去重 API 端点 41
+- API 状态分布: {"200":39,"201":2,"202":1,"204":2,"404":2}
 
 ## 端点清单（API）
 
@@ -15,7 +15,7 @@
 | GET | /api/assistant/availability | 200 | 1 |
 | GET | /api/assistant/capabilities | 200 | 1 |
 | GET | /api/assistant/personalization | 200 | 1 |
-| POST | /api/assistant/sessions | 201 | 1 |
+| POST | /api/assistant/sessions | 201 | 2 |
 | GET | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f | 200 | 1 |
 | GET | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/checkpoint-status | 200 | 1 |
 | GET | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/memory/tasks | 200 | 1 |
@@ -43,7 +43,7 @@
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world/information | 200 | 1 |
 | GET | /api/engine-tasks | 200 | 1 |
 | GET | /api/notifications | 200 | 1 |
-| POST | /api/notifications/popup/claim | 204 | 1 |
+| POST | /api/notifications/popup/claim | 204 | 2 |
 | GET | /api/notifications/unread-count | 200 | 1 |
 | GET | /api/promotions/coupons | 200 | 1 |
 | GET | /api/public/announcements/popup | 200 | 1 |
@@ -66,7 +66,9 @@
 |------|------|--------|----------|
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world | 2 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world?refresh=true |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters | 2 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters?refresh=true |
+| POST | /api/notifications/popup/claim | 2 | POST https://bishuxiezuo.cn/api/notifications/popup/claim<br>POST https://bishuxiezuo.cn/api/notifications/popup/claim#b0438b42e0c2 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds | 2 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds?chapter_number=1&limit=20&offset=0<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds?limit=1&chapter_number=1&offset=0 |
+| POST | /api/assistant/sessions | 2 | POST https://bishuxiezuo.cn/api/assistant/sessions<br>POST https://bishuxiezuo.cn/api/assistant/sessions#44136fa355b3 |
 
 ## POST 缺请求体记录
 
@@ -87,6 +89,10 @@
 ## 采集丢弃记录
 
 无 capture-failures.jsonl（本归档采集时未产生丢弃记录，或采集于该机制引入之前）
+
+## 回放未命中记录（serve v2）
+
+无（未运行过 serve v2 回放，或回放全命中）
 
 ## 补采对比缺失（--extra）
 
