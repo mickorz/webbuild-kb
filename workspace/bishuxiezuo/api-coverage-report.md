@@ -1,9 +1,9 @@
 # API 覆盖率审计报告
 
 - 归档: E:\WorkProjects\webbuild-kb\workspace\bishuxiezuo\archive-bishu
-- 时间: 2026-11-28T06:44:07.417Z
-- 总条目 341，API 条目 46，去重 API 端点 41
-- API 状态分布: {"200":39,"201":2,"202":1,"204":2,"404":2}
+- 时间: 2026-11-28T07:31:22.726Z
+- 总条目 376，API 条目 60，去重 API 端点 41
+- API 状态分布: {"200":53,"201":2,"202":1,"204":2,"404":2}
 
 ## 端点清单（API）
 
@@ -21,12 +21,12 @@
 | GET | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/memory/tasks | 200 | 1 |
 | GET | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/task-events | 200 | 1 |
 | POST | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/welcome | 200 | 1 |
-| GET | /api/auth/me | 200 | 1 |
+| GET | /api/auth/me | 200 | 2 |
 | GET | /api/billing/me | 200 | 1 |
 | GET | /api/billing/overview | 200 | 1 |
-| GET | /api/books | 200 | 1 |
+| GET | /api/books | 200 | 5 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds | 200 | 2 |
-| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters | 200 | 2 |
+| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters | 200 | 6 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters/1 | 404 | 1 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters/1/guide | 404 | 1 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/characters | 200 | 1 |
@@ -39,13 +39,13 @@
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/outlines/volume/latest | 200 | 1 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/prose-draw-settings | 200 | 1 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/story-plan | 200 | 1 |
-| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world | 200 | 2 |
+| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world | 200 | 3 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world/information | 200 | 1 |
 | GET | /api/engine-tasks | 200 | 1 |
 | GET | /api/notifications | 200 | 1 |
 | POST | /api/notifications/popup/claim | 204 | 2 |
 | GET | /api/notifications/unread-count | 200 | 1 |
-| GET | /api/promotions/coupons | 200 | 1 |
+| GET | /api/promotions/coupons | 200 | 5 |
 | GET | /api/public/announcements/popup | 200 | 1 |
 | GET | /api/runtime-status | 200 | 1 |
 | POST | /api/tools/ai-rewrite/welcome | 200 | 1 |
@@ -64,8 +64,11 @@
 
 | 方法 | 路径 | 条目数 | key 列表 |
 |------|------|--------|----------|
-| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world | 2 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world?refresh=true |
-| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters | 2 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters?refresh=true |
+| GET | /api/auth/me | 2 | GET https://bishuxiezuo.cn/api/auth/me<br>GET https://bishuxiezuo.cn/api/auth/me |
+| GET | /api/books | 5 | GET https://bishuxiezuo.cn/api/books<br>GET https://bishuxiezuo.cn/api/books<br>GET https://bishuxiezuo.cn/api/books<br>GET https://bishuxiezuo.cn/api/books<br>GET https://bishuxiezuo.cn/api/books |
+| GET | /api/promotions/coupons | 5 | GET https://bishuxiezuo.cn/api/promotions/coupons<br>GET https://bishuxiezuo.cn/api/promotions/coupons<br>GET https://bishuxiezuo.cn/api/promotions/coupons<br>GET https://bishuxiezuo.cn/api/promotions/coupons<br>GET https://bishuxiezuo.cn/api/promotions/coupons |
+| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world | 3 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world?refresh=true<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world |
+| GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters | 6 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters?refresh=true<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters |
 | POST | /api/notifications/popup/claim | 2 | POST https://bishuxiezuo.cn/api/notifications/popup/claim<br>POST https://bishuxiezuo.cn/api/notifications/popup/claim#b0438b42e0c2 |
 | GET | /api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds | 2 | GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds?chapter_number=1&limit=20&offset=0<br>GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapter-rounds?limit=1&chapter_number=1&offset=0 |
 | POST | /api/assistant/sessions | 2 | POST https://bishuxiezuo.cn/api/assistant/sessions<br>POST https://bishuxiezuo.cn/api/assistant/sessions#44136fa355b3 |
@@ -84,7 +87,16 @@
 
 ## 同签名多响应版本（FIFO）
 
-无
+> 同一请求签名录到多个不同响应（不同业务状态），回放按 FIFO 顺序消费，超出后停在最后一版。
+
+| key | 版本数 |
+|-----|--------|
+| GET https://bishuxiezuo.cn/api/auth/me | 2 |
+| GET https://bishuxiezuo.cn/api/books | 5 |
+| GET https://bishuxiezuo.cn/api/promotions/coupons | 5 |
+| GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world | 2 |
+| GET https://bishuxiezuo.cn/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters | 5 |
+| GET https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans+SC%3Awght%40300%3B400%3B500%3B600%3B700&family=Noto+Serif+SC%3Awght%40400%3B500%3B600%3B700&family=Newsreader%3Aital%2Copsz%2Cwght%400%2C6..72%2C400%3B0%2C6..72%2C500%3B1%2C6..72%2C400%3B1%2C6..72%2C500 | 2 |
 
 ## 请求体截断（reqBodyTruncated）
 

@@ -6,6 +6,7 @@
 //     --step ".bc-open" --step '[title="世界"]' --step "重新编辑世界观" --step "进入编辑"
 //
 // --step 值以 . [ # 开头按 CSS 选择器处理，否则按按钮文本匹配（trim 相等优先，其次包含）。
+// 输入步骤：--step "fill:.search=关键词" 只填充不回车；--step "fillenter:.search=关键词" 填充后回车（搜索类操作）
 // 交互补采：加 --interactive 用有头浏览器人工操作目标功能，回终端按 Enter 结束录制（此时无需 --step）。
 // 合并规则：同 key（METHOD + 归一化URL + 请求体指纹）的多响应全保留（回放按 FIFO 消费），相同响应体去重；
 // 文件按响应内容哈希写入 _steps/，多版本不互相覆盖。
@@ -96,6 +97,16 @@ if (interactive) {
   await new Promise(res => { const rl = createInterface({ input: process.stdin, output: process.stdout }); rl.question('', () => { rl.close(); res() }) })
 }
 else for (const step of steps) {
+  if (step.startsWith('fill:') || step.startsWith('fillenter:')) {
+    const spec = step.slice(step.indexOf(':') + 1)
+    const i = spec.lastIndexOf('=')   // 属性选择器内含 =（如 input[type=search]），按最后一个 = 拆分
+    const sel = spec.slice(0, i), val = spec.slice(i + 1)
+    let ok = false, err = ''
+    try { await page.fill(sel, val, { timeout: 15000 }); if (step.startsWith('fillenter:')) await page.press(sel, 'Enter'); ok = true } catch (e) { err = String(e).slice(0, 160) }
+    console.log(`  ${ok ? 'ok  ' : 'MISS'} ${step}${err ? ' | ' + err : ''}`)
+    await page.waitForTimeout(stepWait)
+    continue
+  }
   const isSel = /^[.#\[]/.test(step)
   let done = false
   if (isSel) {

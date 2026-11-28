@@ -20,6 +20,7 @@
 import { createRequire } from 'node:module'
 import { pathToFileURL, fileURLToPath } from 'node:url'
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, cpSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join, resolve, dirname } from 'node:path'
 import { spawn } from 'node:child_process'
 import net from 'node:net'
@@ -57,16 +58,21 @@ const freePort = start => new Promise(res => {
   s.once('error', () => { s.close(); res(freePort(start + 1)) })
   s.listen(start, '127.0.0.1')
 })
-const PORT = await freePort(conf.port || 8795)
-const base = 'http://127.0.0.1:' + PORT
-const serve = spawn(process.execPath, [join(tmpArch, 'serve.mjs')], { cwd: tmpArch, env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'pipe'] })
-const serveLog = []
-serve.stdout.on('data', d => serveLog.push(String(d)))
-serve.stderr.on('data', d => serveLog.push(String(d)))
 const sleep = ms => new Promise(r => setTimeout(r, ms))
-let ready = false
-for (let i = 0; i < 40 && !ready; i++) { try { const r = await fetch(base + '/'); if (r.status) ready = true } catch {} if (!ready) await sleep(300) }
-if (!ready) { console.error('回放服务器启动失败:\n' + serveLog.join('')); serve.kill(); process.exit(1) }
+// FIFO 消费计数在服务端进程内，每个场景重启 serve 以隔离状态（Batch 5.1）
+async function startServe() {
+  const port = await freePort(conf.port || 8795)
+  const child = spawn(process.execPath, [join(tmpArch, 'serve.mjs')], { cwd: tmpArch, env: { ...process.env, PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] })
+  const log = []
+  child.stdout.on('data', d => log.push(String(d)))
+  child.stderr.on('data', d => log.push(String(d)))
+  const b = 'http://127.0.0.1:' + port
+  for (let i = 0; i < 40; i++) { try { const r = await fetch(b + '/'); if (r.status) return { child, base: b, port } } catch {} await sleep(300) }
+  console.error('回放服务器启动失败:\n' + log.join(''))
+  child.kill()
+  throw new Error('serve 启动失败')
+}
+let { child: serve, base, port: lastPort } = await startServe()
 
 // ---- 断言工具 ----
 const getp = (o, path) => path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean).reduce((a, k) => a == null ? a : (/^\d+$/.test(k) ? a[Number(k)] : a[k]), o)
@@ -76,8 +82,18 @@ const checkField = (body, spec) => {
   if (typeof spec.expect === 'string' && spec.expect.startsWith('contains:')) return typeof v === 'string' && v.includes(spec.expect.slice(9))
   return v === spec.expect
 }
-const findCapture = (net, method, path) => {
-  const hit = net.filter(x => x.method === method && (() => { try { return new URL(x.url).pathname === path } catch { return false } })())
+const normPathQ = u => { try { const x = new URL(u); const sp = [...x.searchParams.entries()].sort((p, q) => p[0] < q[0] ? -1 : p[0] > q[0] ? 1 : 0); return x.pathname + (sp.length ? '?' + sp.map(([k, v]) => k + '=' + v).join('&') : '') } catch { return u } }
+const pathOf = u => { try { return new URL(u).pathname } catch { return u } }
+const sha12 = s => createHash('sha256').update(s || '').digest('hex').slice(0, 12)
+// 变体感知匹配: method + pathname + 可选 query 逐项 + 可选请求体完全一致（Batch 5.1）
+const findCapture = (net, a) => {
+  const hit = net.filter(x => {
+    if (x.method !== a.method) return false
+    try { if (new URL(x.url).pathname !== a.path) return false } catch { return false }
+    if (a.query) { let q = {}; try { q = Object.fromEntries(new URL(x.url).searchParams) } catch {}; for (const [k, v] of Object.entries(a.query)) if (String(q[k]) !== String(v)) return false }
+    if (a.body !== undefined && (x.postData || '') !== a.body) return false
+    return true
+  })
   return hit.length ? hit[hit.length - 1] : null
 }
 
@@ -132,9 +148,15 @@ for (const sc of conf.scenarios) {
       let stepFails = 0
       for (const st of sc.steps || []) {
         const wait = st.wait || 3000
-        let ok = false, how = st.click || st.clickText
+        let ok = false, how = st.click || st.clickText || (st.fill !== undefined ? 'fill ' + st.fill + '=' + st.value : '')
         try {
-          if (st.click) { await page.click(st.click, { force: true, timeout: 15000 }); ok = true }
+          if (st.fill !== undefined) {
+            const loc = page.locator(st.fill).first()
+            await loc.fill(st.value || '', { timeout: 15000 })
+            if (st.enter) await loc.press('Enter')
+            ok = true
+          }
+          else if (st.click) { await page.click(st.click, { force: true, timeout: 15000 }); ok = true }
           else if (st.clickText) {
             ok = await page.evaluate(text => {
               const els = [...document.querySelectorAll('button, [role=button], a, span')]
@@ -147,6 +169,15 @@ for (const sc of conf.scenarios) {
         if (!ok) stepFails++
         await page.waitForTimeout(wait)
         add('L1', 'step ' + how, ok, ok ? '' : '步骤未命中')
+        // 步内 DOM 断言: 支持操作后立即验证界面状态变化（如搜索过滤结果）
+        if (ok && st.expectText) {
+          const has = (await page.evaluate(() => document.body.innerText)).includes(st.expectText)
+          add('L1', `step 后应出现「${st.expectText}」`, has, has ? '' : '未出现')
+        }
+        if (ok && st.expectTextAbsent) {
+          const gone = !(await page.evaluate(() => document.body.innerText)).includes(st.expectTextAbsent)
+          add('L1', `step 后应消失「${st.expectTextAbsent}」`, gone, gone ? '' : '仍然可见')
+        }
       }
       for (const d of sc.dom || []) {
         let ok = false, detail = ''
@@ -158,15 +189,19 @@ for (const sc of conf.scenarios) {
         add('L1', 'dom ' + (d.text || d.sel), ok, ok ? '' : detail)
       }
       for (const a of sc.api || []) {
-        const cap = findCapture(net, a.method, a.path)
-        if (!cap) { add('L2', `api ${a.method} ${a.path}`, false, '场景期间未观察到该请求'); continue }
+        const cap = findCapture(net, a)
+        if (!cap) { add('L2', `api ${a.method} ${a.path}`, false, '场景期间未观察到该请求（含变体条件）'); continue }
         let ok = cap.status === a.status
         add('L2', `api ${a.method} ${a.path} status=${a.status}`, ok, ok ? '' : '实际 ' + cap.status)
         if (ok && a.fields) {
-          // 字段断言用直接重放（同签名），不依赖浏览器回调里的响应体捕获
-          const rr = await fetch(base + a.path, { method: a.method, body: cap.postData || undefined, headers: cap.postData ? { 'content-type': 'application/json' } : undefined })
-          const txt = await rr.text()
-          let body = null; try { body = JSON.parse(txt) } catch {}
+          // 字段断言优先用捕获体；捕获体不可用才重放同签名兑底（会推进服务端 FIFO，非默认路径）
+          let body = null
+          try { body = JSON.parse(cap.body) } catch {}
+          if (!body) {
+            const rr = await fetch(base + a.path, { method: a.method, body: cap.postData || undefined, headers: cap.postData ? { 'content-type': 'application/json' } : undefined })
+            const txt = await rr.text()
+            try { body = JSON.parse(txt) } catch {}
+          }
           for (const [k, v] of Object.entries(a.fields)) {
             const pass = body ? checkField(body, { key: k, expect: v }) : false
             add('L2', `api ${a.method} ${a.path} ${k}`, pass, pass ? '' : `期望 ${v}，实际 ${JSON.stringify(getp(body, k))}`)
@@ -177,13 +212,15 @@ for (const sc of conf.scenarios) {
       const forbid = sc.forbidKinds || DEFAULT_FORBID
       const bad = newUn.filter(u => forbid.includes(u.kind))
       add('L3', 'forbid unmatched/ambiguous', bad.length === 0, bad.length ? bad.map(b => b.kind + ' ' + b.url).join('; ') : '')
+      // fallback 白名单: 只允许明确登记的回退，其余直接失败（Batch 5.1）
       const fallbacks = newUn.filter(u => FALLBACK_KINDS.includes(u.kind))
-      if (sc.forbidFallbacks) add('L3', 'no fallback', fallbacks.length === 0, fallbacks.map(b => b.kind).join('; '))
+      const registered = sc.expectedFallbacks || []
+      const unreg = fallbacks.filter(u => !registered.some(r => r.kind === u.kind && pathOf(u.url) === r.path))
+      add('L3', 'fallback 白名单', unreg.length === 0, unreg.length ? unreg.map(u => u.kind + ' ' + u.url).join('; ') : `全部命中登记（${fallbacks.length} 条）`)
       const maxErr = sc.maxConsoleErrors ?? 0
       // 资源类 console 噪声不计入: net::ERR_FAILED 是我们拦截第三方依赖造成的；404 由下方专项检查接管
       const jsErrors = consoleErrors.filter(t => !t.startsWith('Failed to load resource'))
       add('L4', `JS 错误 ≤ ${maxErr}`, jsErrors.length <= maxErr, jsErrors.slice(0, 3).join(' | '))
-      const pathOf = u => { try { return new URL(u).pathname } catch { return u } }
       const bad404 = net.filter(x => x.status === 404 && !recorded404.has(pathOf(x.url)))
       add('L4', '404 均为录制态（无新增）', bad404.length === 0, bad404.slice(0, 3).map(x => x.url).join(' | '))
       const originLeak = blocked.filter(u => originHost && u.includes(originHost))
@@ -228,6 +265,9 @@ for (const sc of conf.scenarios) {
       const forbid = sc.forbidKinds || []
       const bad = newUn.filter(u => forbid.includes(u.kind))
       add('L3', 'forbid ' + (forbid.join('/') || '无'), bad.length === 0, bad.map(b => b.kind + ' ' + b.url).join('; '))
+      const fallbacks = newUn.filter(u => FALLBACK_KINDS.includes(u.kind))
+      const unreg = fallbacks.filter(u => !(sc.expectedFallbacks || []).some(r => r.kind === u.kind && pathOf(u.url) === r.path))
+      add('L3', 'fallback 白名单', unreg.length === 0, unreg.length ? unreg.map(u => u.kind + ' ' + u.url).join('; ') : `全部命中登记（${fallbacks.length} 条）`)
     } catch (e) { add('L2', 'api 场景执行异常', false, String(e).slice(0, 300)) }
   }
 
@@ -235,6 +275,9 @@ for (const sc of conf.scenarios) {
   results.push({ id: sc.id, name: sc.name, type: sc.type || 'api', pass: passed, checks, unmatched: readUnmatched().slice(beforeUn), ms: Date.now() - t0 })
   console.log(`${passed ? 'PASS' : 'FAIL'}  ${sc.id} ${sc.name}  (${fails().length} 项失败, ${Date.now() - t0}ms)`)
   for (const f of fails()) console.log(`      [${f.layer}] ${f.name} — ${f.detail}`)
+  // 场景间重启 serve: 隔离服务端 FIFO 消费状态
+  serve.kill()
+  try { ({ child: serve, base, port: lastPort } = await startServe()) } catch (e) { console.error(String(e)); process.exit(1) }
 }
 
 await browser.close()
@@ -247,7 +290,7 @@ const passed = results.filter(r => r.pass).length
 const md = []
 md.push('# Replay Coverage Report')
 md.push('')
-md.push(`- 归档: ${archiveDir}（临时副本） | serve: v2.3 | 端口: ${PORT}`)
+md.push(`- 归档: ${archiveDir}（临时副本） | serve: v2.3 | 端口: ${lastPort}`)
 md.push(`- 时间: ${new Date().toISOString()}`)
 md.push(`- 场景: ${passed}/${results.length} 通过 | unmatched ${totalUn.filter(u => u.kind === 'unmatched').length} | 歧义拒绝 ${totalUn.filter(u => String(u.kind).startsWith('ambiguous')).length} | 宽松回退/截断留痕 ${fallbackCount}`)
 md.push('')

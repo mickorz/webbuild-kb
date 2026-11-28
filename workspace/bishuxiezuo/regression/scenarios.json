@@ -7,10 +7,32 @@
       "type": "page",
       "path": "/console/console.html",
       "settle": 6000,
-      "dom": [{ "sel": ".bc-open" }],
+      "dom": [
+        {
+          "sel": ".bc-open"
+        }
+      ],
       "api": [
-        { "method": "GET", "path": "/api/auth/me", "status": 200, "fields": { "id": "present", "email": "present" } },
-        { "method": "GET", "path": "/api/books", "status": 200 }
+        {
+          "method": "GET",
+          "path": "/api/auth/me",
+          "status": 200,
+          "fields": {
+            "id": "present",
+            "email": "present"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/books",
+          "status": 200
+        }
+      ],
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
+        }
       ]
     },
     {
@@ -19,9 +41,27 @@
       "type": "page",
       "path": "/console/console.html",
       "settle": 6000,
-      "dom": [{ "text": "全球高武" }],
+      "dom": [
+        {
+          "text": "全球高武"
+        }
+      ],
       "api": [
-        { "method": "GET", "path": "/api/books", "status": 200, "fields": { "[0].title": "全球高武", "[0].id": "2de6cf8f-9b82-4edd-92d1-e0b6611546ec" } }
+        {
+          "method": "GET",
+          "path": "/api/books",
+          "status": 200,
+          "fields": {
+            "[0].title": "全球高武",
+            "[0].id": "2de6cf8f-9b82-4edd-92d1-e0b6611546ec"
+          }
+        }
+      ],
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
+        }
       ]
     },
     {
@@ -31,12 +71,32 @@
       "path": "/console/console.html",
       "settle": 5000,
       "steps": [
-        { "click": ".bc-open", "wait": 4500 },
-        { "click": "[title=\"世界\"]", "wait": 4000 }
+        {
+          "click": ".bc-open",
+          "wait": 4500
+        },
+        {
+          "click": "[title=\"世界\"]",
+          "wait": 4000
+        }
       ],
-      "dom": [{ "text": "重新编辑世界观" }],
+      "dom": [
+        {
+          "text": "重新编辑世界观"
+        }
+      ],
       "api": [
-        { "method": "GET", "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world", "status": 200 }
+        {
+          "method": "GET",
+          "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/world",
+          "status": 200
+        }
+      ],
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
+        }
       ]
     },
     {
@@ -46,14 +106,37 @@
       "path": "/console/console.html",
       "settle": 5000,
       "steps": [
-        { "click": ".bc-open", "wait": 4500 },
-        { "click": "[title=\"世界\"]", "wait": 4000 },
-        { "clickText": "重新编辑世界观", "wait": 4000 },
-        { "clickText": "进入编辑", "wait": 4000 }
+        {
+          "click": ".bc-open",
+          "wait": 4500
+        },
+        {
+          "click": "[title=\"世界\"]",
+          "wait": 4000
+        },
+        {
+          "clickText": "重新编辑世界观",
+          "wait": 4000
+        },
+        {
+          "clickText": "进入编辑",
+          "wait": 4000
+        }
       ],
       "dom": [
-        { "sel": ".cr-shell" },
-        { "count": "[class*=\"cr-wbe\"]", "gte": 1 }
+        {
+          "sel": ".cr-shell"
+        },
+        {
+          "count": "[class*=\"cr-wbe\"]",
+          "gte": 1
+        }
+      ],
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
+        }
       ]
     },
     {
@@ -63,19 +146,68 @@
       "path": "/console/console.html",
       "settle": 5000,
       "steps": [
-        { "click": ".asst-launch", "wait": 5000 }
+        {
+          "click": ".asst-launch",
+          "wait": 5000
+        }
       ],
-      "dom": [{ "text": "笔枢助手" }],
+      "dom": [
+        {
+          "text": "笔枢助手"
+        }
+      ],
       "api": [
-        { "method": "POST", "path": "/api/assistant/sessions", "status": 201, "fields": { "id": "present", "messages[0].content": "contains:笔枢助手" } }
+        {
+          "method": "POST",
+          "path": "/api/assistant/sessions",
+          "status": 201,
+          "fields": {
+            "id": "present",
+            "messages[0].content": "contains:笔枢助手"
+          }
+        }
+      ],
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
+        }
       ]
+    },
+    {
+      "id": "E01",
+      "name": "书架管理与搜索（客户端过滤）",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 6000,
+      "steps": [
+        { "fill": "input[type=search]", "value": "全球", "enter": true, "wait": 2000, "expectText": "全球高武" },
+        { "fill": "input[type=search]", "value": "zzz不存在的书名", "enter": true, "wait": 2500, "expectText": "全球高武" },
+        { "fill": "input[type=search]", "value": "", "enter": true, "wait": 1500, "expectText": "全球高武" },
+        { "click": ".bc-open", "wait": 6000 }
+      ],
+      "api": [
+        { "method": "GET", "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters", "status": 200 },
+        { "method": "GET", "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/characters", "status": 200 }
+      ],
+      "expectedFallbacks": [{ "kind": "query-variant-fallback", "path": "/console/console.css" }]
     },
     {
       "id": "S06",
       "name": "并发相同签名请求 FIFO 确定性",
       "type": "api",
       "requests": [
-        { "name": "并发6次创建会话（单版本钳位）", "method": "POST", "path": "/api/assistant/sessions", "body": "{}", "concurrent": 6, "expect": { "status": 201, "allSameBody": true } }
+        {
+          "name": "并发6次创建会话（单版本钳位）",
+          "method": "POST",
+          "path": "/api/assistant/sessions",
+          "body": "{}",
+          "concurrent": 6,
+          "expect": {
+            "status": 201,
+            "allSameBody": true
+          }
+        }
       ]
     },
     {
@@ -83,11 +215,37 @@
       "name": "未录制与歧义请求诊断",
       "type": "api",
       "requests": [
-        { "name": "POST未录制端点", "method": "POST", "path": "/api/definitely-missing", "body": "{\"x\":1}", "expect": { "status": 599 } },
-        { "name": "GET未录制端点", "method": "GET", "path": "/api/definitely-missing", "expect": { "status": 599 } },
-        { "name": "sessions歧义body拒绝", "method": "POST", "path": "/api/assistant/sessions", "body": "{\"x\":1}", "expect": { "status": 599 } }
+        {
+          "name": "POST未录制端点",
+          "method": "POST",
+          "path": "/api/definitely-missing",
+          "body": "{\"x\":1}",
+          "expect": {
+            "status": 599
+          }
+        },
+        {
+          "name": "GET未录制端点",
+          "method": "GET",
+          "path": "/api/definitely-missing",
+          "expect": {
+            "status": 599
+          }
+        },
+        {
+          "name": "sessions歧义body拒绝",
+          "method": "POST",
+          "path": "/api/assistant/sessions",
+          "body": "{\"x\":1}",
+          "expect": {
+            "status": 599
+          }
+        }
       ],
-      "expectKinds": ["unmatched", "ambiguous-body-variant"]
+      "expectKinds": [
+        "unmatched",
+        "ambiguous-body-variant"
+      ]
     }
   ]
 }
