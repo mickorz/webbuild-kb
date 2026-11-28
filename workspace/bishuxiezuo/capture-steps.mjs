@@ -9,7 +9,9 @@
 // 输入步骤：--step "fill:.search=关键词" 只填充不回车；--step "fillenter:.search=关键词" 填充后回车（搜索类操作）
 // 等待步骤：--step "wait:20000" 原地等待（长耗时操作如 AI 铸造生成，保持浏览器开启以持续录制）
 // 其他原语：--step "reload:8000" 重载页面（验证持久化）；--step "key:Escape" 按键（取消编辑场景）；
-//           --step "clickcard:WBTEST-E02" 进书（按卡片文本定位 .bc-open，需先 hover 才出现）
+//           --step "clickcard:WBTEST-E02" 进书（按卡片文本定位 .bc-open，需先 hover 才出现）；
+//           --step "sse:/api/engine-tasks/<id>/stream?after_id=0" 在页面上下文主动拉取 SSE（用页面自身凭据，
+//                   用于补采已完成任务的真实流式事件，不触发新的 AI 任务）
 // 交互补采：加 --interactive 用有头浏览器人工操作目标功能，回终端按 Enter 结束录制（此时无需 --step）。
 // 指定书籍：--ls lf_selected_book=<bookId> 页面加载后写入 localStorage 并重载（SPA 的当前书籍选中态存在这里）
 // 合并规则：同 key（METHOD + 归一化URL + 请求体指纹）的多响应全保留（回放按 FIFO 消费），相同响应体去重；
@@ -88,7 +90,7 @@ page.on('response', async r => {
     const ct = r.headers()['content-type'] || ''
     // 流式响应：content-type=text/event-stream 或 /stream 端点，body 读取会挂住或不可读
     if (ct.includes('event-stream') || /\/stream(\?|$)/.test(new URL(u).pathname)) {
-      fail({ kind: 'stream-not-captured', method: m, url: u, status: r.status(), ct })
+      // 流式由注入采集器（stream-capture-inject.js）负责，这里跳过普通采集且不记失败
       return
     }
     const body = await r.body().catch(() => null)
@@ -104,7 +106,11 @@ page.on('response', async r => {
   } catch (e) { fail({ kind: 'handler-error', method: m, url: u, error: String(e).slice(0, 200) }) }
 })
 
+// 流式采集器：独立文件 stream-capture-inject.js（可单独语法校验），注入到页面脚本之前
+const STREAM_CAPTURE = readFileSync(join(import.meta.dirname, "stream-capture-inject.js"), "utf8")
+
 console.log('打开', url)
+await page.addInitScript(STREAM_CAPTURE)
 await page.goto(url, { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(4000)
 if (lsSeed.length) {
@@ -119,6 +125,26 @@ if (interactive) {
   await new Promise(res => { const rl = createInterface({ input: process.stdin, output: process.stdout }); rl.question('', () => { rl.close(); res() }) })
 }
 else for (const step of steps) {
+  if (step.startsWith('sse:')) {
+    const path = step.slice(4)
+    let ok = false, err = ''
+    try {
+      // 在页面上下文用页面自身凭据拉取（token 在 localStorage）；采集器包装过的 fetch 会记录帧
+      await page.evaluate(p => {
+        let tok = ''
+        for (const k of ['novelbuilt.tokens', 'lf_tokens']) {
+          try { const t = JSON.parse(localStorage.getItem(k) || '{}'); if (t.access_token) { tok = t.access_token; break } } catch {}
+        }
+        const headers = { accept: 'text/event-stream' }
+        if (tok) headers.authorization = 'Bearer ' + tok
+        return fetch(location.origin + p, { headers }).then(r => r.text().catch(() => '')).catch(() => '')
+      }, path)
+      ok = true
+    } catch (e) { err = String(e).slice(0, 140) }
+    console.log(`  ${ok ? 'ok  ' : 'MISS'} sse ${path.slice(0, 70)}${err ? ' | ' + err : ''}`)
+    await page.waitForTimeout(3000)   // 给采集器的异步读流留时间
+    continue
+  }
   if (step.startsWith('wait:')) {
     const ms = Number(step.slice(5)) || 5000
     console.log(`  wait ${ms}ms`)
@@ -194,7 +220,30 @@ await page.evaluate(async () => {
 await page.waitForTimeout(1500)
 const finalUrl = page.url()
 const finalTitle = await page.title()
+// 取出流式记录并落盘（与普通 API 分离，不混入 files/）
+const streams = await page.evaluate(() => window.__streamRec || []).catch(() => [])
 await browser.close()
+const streamsDir = join(outDir, 'streams')
+let streamCount = 0
+if (streams.length) {
+  mkdirSync(streamsDir, { recursive: true })
+  let manifest = []
+  try { manifest = JSON.parse(readFileSync(join(streamsDir, 'manifest.json'), 'utf8')) } catch {}
+  for (const s of streams) {
+    if (!s.frames || !s.frames.length) continue
+    let p = ''
+    try { p = new URL(s.url).pathname } catch {}
+    const fh = createHash('sha256').update(s.url + JSON.stringify(s.frames.length)).digest('hex').slice(0, 12)
+    const file = (p.replace(/^\//, '').replace(/[^\w./-]/g, '_') || 'stream') + '.' + fh + '.jsonl'
+    const absStream = join(streamsDir, file)
+    mkdirSync(dirname(absStream), { recursive: true })
+    writeFileSync(absStream, s.frames.map(f => JSON.stringify(f)).join('\n') + '\n')
+    manifest = manifest.filter(m => !(m.method === 'GET' && m.path === p && m.file === file))
+    manifest.push({ method: 'GET', path: p, url: s.url, status: s.status || 200, contentType: s.contentType || 'text/event-stream', transport: s.transport, file, frames: s.frames.length, terminal: s.terminal || 'eof' })
+    streamCount++
+  }
+  writeFileSync(join(streamsDir, 'manifest.json'), JSON.stringify(manifest, null, 2))
+}
 
 let added = 0
 const outEntries = [...idx.entries]
@@ -241,4 +290,5 @@ writeFileSync(join(outDir, 'index.json'), JSON.stringify({ ...idx, count: entrie
 const recorded = [...rec.values()].reduce((a, l) => a + l.length, 0)
 console.log(`录制 ${recorded} 条响应（同签名多版本 FIFO 保留，相同响应去重），归档更新为 ${entries.length} 条（新增 ${added}）`)
 if (existsSync(failuresPath)) console.log('采集失败/丢弃记录:', failuresPath)
+if (streamCount) console.log('流式样本:', streamCount, '条 →', streamsDir)
 console.log('最终页面:', finalUrl, '|', finalTitle)

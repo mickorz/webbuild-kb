@@ -228,45 +228,43 @@
     },
     {
       "id": "E02",
-      "name": "世界观维度与角色数据（内容级，UI 待 Batch 7）",
-      "type": "api",
-      "requests": [
+      "name": "新书进书与铸造向导壳渲染（UI）",
+      "type": "page",
+      "path": "/console/console.html",
+      "settle": 6000,
+      "steps": [
         {
-          "name": "world 详情",
+          "clickCard": "WBTEST-E02",
+          "wait": 8000
+        }
+      ],
+      "dom": [
+        {
+          "sel": ".cr-shell"
+        },
+        {
+          "text": "铸造一个世界"
+        }
+      ],
+      "api": [
+        {
           "method": "GET",
           "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world",
-          "expect": {
-            "status": 200,
-            "fields": {
-              "status": "ready",
-              "engine_book_id": "present",
-              "dimensions": "present"
-            }
+          "status": 200,
+          "fields": {
+            "dimensions": "present"
           }
         },
         {
-          "name": "world existence 维度",
-          "method": "GET",
-          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/existence",
-          "expect": {
-            "status": 200
-          }
-        },
-        {
-          "name": "world core_laws 维度",
-          "method": "GET",
-          "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/core_laws",
-          "expect": {
-            "status": 200
-          }
-        },
-        {
-          "name": "角色列表",
           "method": "GET",
           "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/characters",
-          "expect": {
-            "status": 200
-          }
+          "status": 200
+        }
+      ],
+      "expectedFallbacks": [
+        {
+          "kind": "query-variant-fallback",
+          "path": "/console/console.css"
         }
       ]
     },

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// serve-upgrade-version: 2.4
-// UIForge replay server v2.4 — 在 v2.3 基础上加 Endpoint Replay Policy（Batch 6）:
-//   默认 fifo（向后兼容）；replay-policies.json 可声明某些 GET 端点用 latest（取最后录制版本）。
-//   策略只决定「同一已精确匹配签名内多版本如何选」，不绕过指纹匹配与歧义拒绝。
-// v2.3 既有能力不变：同签名 FIFO、query 排序归一化、歧义拒绝、原始 5xx、截断请求体不指纹。
+// serve-upgrade-version: 2.5
+// UIForge replay server v2.5 — 在 v2.4 基础上加 Stream Replay（Batch 7）:
+//   archive/streams/manifest.json 登记的 SSE / NDJSON 端点按帧回放（保持事件顺序与原始帧文本），
+//   不再把流式数据拼成一次性 JSON。WebSocket 回放暂不支持（manifest 中标记 transport=websocket 时跳过）。
+// v2.3/v2.4 既有能力不变：同签名 FIFO、query 归一化、歧义拒绝、原始 5xx、截断请求体不指纹、Endpoint Replay Policy。
 //   1 同签名多响应 FIFO: 归档允许同 key 多条目（同一请求在不同业务状态下的不同响应），按请求顺序消费，超出后停在最后一版
 //   2 Query 排序归一化: 参数顺序不同视为同一 URL，消除顺序误判
 //   3 歧义检测: URL 级宽松回退命中多个不同变体时拒绝猜测（599 + 留痕），唯一候选才允许回退且留痕
@@ -38,14 +38,14 @@ const policyFor = (method, pathname) => {
   for (const r of POLICIES.rules || []) {
     if (r.method && r.method !== method) continue
     const re = new RegExp('^' + String(r.path).replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/:([A-Za-z_]+)/g, '[^/]+') + '$')
-    if (re.test(pathname)) return r.mode === 'latest' ? 'latest' : 'fifo'
+    if (re.test(pathname)) return { mode: r.mode === 'latest' ? 'latest' : 'fifo', ignoreQuery: !!r.ignoreQuery }
   }
-  return POLICIES.default === 'latest' ? 'latest' : 'fifo'
+  return { mode: POLICIES.default === 'latest' ? 'latest' : 'fifo', ignoreQuery: false }
 }
 const pick = (map, sig, mode) => {
   const a = map.get(sig)
   if (!a) return null
-  if (mode === 'latest') return a[a.length - 1]   // 幂等快照类：始终取最后录制版本
+  if (mode && mode.mode === 'latest') return a[a.length - 1]   // 幂等快照类：始终取最后录制版本
   const n = fifo.get(sig) || 0
   fifo.set(sig, n + 1)
   return a[Math.min(n, a.length - 1)]
@@ -54,6 +54,30 @@ const PORT = +(process.env.PORT || 8787)
 const HOST = process.env.HOST || '127.0.0.1'   // local replay; set HOST=0.0.0.0 to expose it
 const MISS_STATUS = +(process.env.REPLAY_MISS || 599)   // 未命中状态码；REPLAY_MISS=204 回退 v1 行为
 const UNMATCHED = path.join(HERE, 'unmatched-requests.jsonl')
+// Stream fixtures: SSE / NDJSON 端点（见 archive/streams/manifest.json）
+const STREAMS = (() => { try { return JSON.parse(readFileSync(path.join(HERE, 'streams', 'manifest.json'), 'utf8')) } catch { return [] } })()
+const STREAM_DELAY = +(process.env.REPLAY_STREAM_DELAY || 5)   // 帧间延迟(ms)，让客户端能观察到增量
+const streamFor = (method, pathname) => {
+  const m = STREAMS.filter(s => s.method === method && s.path === pathname && s.transport !== 'websocket')
+  return m.length ? m[m.length - 1] : null   // 同端点多份录制取最新（流式终态语义）
+}
+const replayStream = (res, st) => {
+  let frames = []
+  try { frames = readFileSync(path.join(HERE, 'streams', st.file), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) } catch (e) {
+    console.error('  [replay] stream fixture missing for ' + st.path + ' → streams/' + st.file)
+    res.writeHead(404, { 'access-control-allow-origin': '*' }); return res.end()
+  }
+  const sep = (st.contentType || '').includes('ndjson') ? '\n' : '\n\n'
+  res.writeHead(st.status || 200, { 'content-type': st.contentType || 'text/event-stream', 'cache-control': 'no-store', 'access-control-allow-origin': '*', 'x-replay-stream': 'frames=' + frames.length })
+  let i = 0
+  const next = () => {
+    if (i >= frames.length) return res.end()
+    res.write(frames[i].raw + sep)
+    i++
+    setTimeout(next, STREAM_DELAY)
+  }
+  next()
+}
 const logUnmatched = o => { try { appendFileSync(UNMATCHED, JSON.stringify({ ts: new Date().toISOString(), ...o }) + '\n') } catch {} }
 const inject = `<script>(function(){try{var _d=Date;Date=class extends _d{constructor(){super(1751328000000)}static now(){return 1751328000000}};}catch(e){}
 navigator.sendBeacon=function(){return true};try{window.WebSocket=function(){return{send:function(){},close:function(){},addEventListener:function(){}}}}catch(e){}})();</script>`
@@ -76,6 +100,9 @@ http.createServer(async (req, res) => {
   const rb = await readBody(req)
   const bh = rb && rb.buf.length && !rb.truncated ? '#' + createHash('sha256').update(rb.buf).digest('hex').slice(0, 12) : ''
   const missBase = { method: req.method, url: idx.origin + req.url, bodyHash: bh || null, bodyLen: rb ? rb.buf.length : 0 }
+  // 流式端点优先：按 method + pathname 匹配（忽略 after_id 等进度参数），事件级回放
+  const st = streamFor(req.method, pathnameOf(full))
+  if (st) { console.error('  [replay] stream ' + req.method + ' ' + req.url + ' → frames=' + st.frames); return replayStream(res, st) }
   let sigP = null; try { sigP = req.method + ' ' + new URL(full).pathname } catch {}
   let e = null, loose = null
   const policy = policyFor(req.method, pathnameOf(full))   // Endpoint Replay Policy
@@ -93,9 +120,12 @@ http.createServer(async (req, res) => {
   if (!e && sigP) {
     const cands = byPath.get(sigP)
     if (cands) {
-      // 只剩 pathname 匹配（query 对不上）: 唯一候选才回退并留痕，多个候选说明 query 变体缺失
-      if (new Set(cands.map(x => x.key)).size > 1) return rejectAmbiguous(res, 'ambiguous-query-variant', missBase)
-      e = cands[0]; loose = rb && rb.buf.length && !bh ? 'request-body-truncated' : 'query-variant-fallback'
+      // 只剩 pathname 匹配（query 对不上）: 显式声明 ignoreQuery 的端点取最新；否则唯一候选才回退，多候选拒绝猜测
+      if (policy.ignoreQuery) {
+        e = cands[cands.length - 1]
+        loose = 'policy-query-ignore'
+      } else if (new Set(cands.map(x => x.key)).size > 1) return rejectAmbiguous(res, 'ambiguous-query-variant', missBase)
+      else { e = cands[0]; loose = rb && rb.buf.length && !bh ? 'request-body-truncated' : 'query-variant-fallback' }
     }
   }
   if (loose && e) { logUnmatched({ kind: loose, ...missBase }); console.error('  [replay] ' + loose + ' ' + req.method + ' ' + req.url) }
@@ -123,4 +153,4 @@ http.createServer(async (req, res) => {
   if (err.code === 'EADDRINUSE') console.error('\n  port ' + PORT + ' is busy — retry with:  PORT=' + (PORT + 1) + ' node serve.mjs\n')
   else console.error('\n  replay server error: ' + err.message + '\n')
   process.exit(1)
-}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.4 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + '\n'))
+}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.5 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + (STREAMS.length ? '  streams=' + STREAMS.length : '') + '\n'))

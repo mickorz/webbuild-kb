@@ -29,3 +29,4 @@ dev-examples/*/tmp/
 workspace/*/regression/.run/
 workspace/*/regression/report/evidence/
 workspace/*/regression/report/coverage-*.json
+# 流式样本可能很大，但属于归档资产：不忽略（如后续体积失控再单独处理）
