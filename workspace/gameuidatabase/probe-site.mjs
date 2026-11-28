@@ -1,0 +1,12 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch({ headless: true })
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } })
+const p = await ctx.newPage()
+const nav = await p.goto('https://www.gameuidatabase.com/', { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(e => null)
+console.log('status', nav && nav.status())
+console.log('url', p.url())
+await p.waitForTimeout(5000)
+console.log('title', await p.title())
+console.log('text', (await p.evaluate(() => document.body.innerText)).slice(0, 600).replace(/\n+/g, ' | '))
+await p.screenshot({ path: 'E:/WorkProjects/webbuild-kb/workspace/gameuidatabase/gud-home.png', fullPage: false })
+await b.close()

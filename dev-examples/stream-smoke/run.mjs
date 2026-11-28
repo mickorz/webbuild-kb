@@ -95,7 +95,7 @@ const tframes = [
 ]
 writeFileSync(join(timingArch, 'streams', 'slow.jsonl'), tframes.map(f => JSON.stringify(f)).join('\n') + '\n')
 writeFileSync(join(timingArch, 'streams', 'manifest.json'), JSON.stringify([{ method: 'GET', path: '/api/slow/stream', url: 'http://127.0.0.1:8803/api/slow/stream', status: 200, contentType: 'text/event-stream', transport: 'fetch-sse', file: 'slow.jsonl', frames: 4, terminal: 'eof' }]))
-const timeRun = async (mode, p) => {
+const timeRun = async (mode, p, q = '') => {
   const child = spawn(process.execPath, [join(timingArch, 'serve.mjs')], { cwd: timingArch, env: { ...process.env, PORT: String(p), REPLAY_STREAM_MODE: mode, REPLAY_STREAM_DELAY: '0' }, stdio: ['ignore', 'pipe', 'pipe'] })
   let bootLog = ''
   child.stdout.on('data', d => { bootLog += String(d) })
@@ -103,7 +103,7 @@ const timeRun = async (mode, p) => {
   const b = 'http://127.0.0.1:' + p
   if (!await waitUp(b)) { child.kill(); return { ms: -1, frames: 0 } }
   const t0 = Date.now()
-  const r = await fetch(b + '/api/slow/stream', { headers: { accept: 'text/event-stream' } })
+  const r = await fetch(b + '/api/slow/stream' + q, { headers: { accept: 'text/event-stream' } })
   const txt = await r.text()
   const ms = Date.now() - t0
   child.kill()
@@ -111,9 +111,13 @@ const timeRun = async (mode, p) => {
 }
 const inst = await timeRun('instant', 8803)
 const rec = await timeRun('recorded', 8804)
+// 8.1: 游标续读的时间基准（after_id=2 → 首帧 C 立即发，再 200ms 后 D）
+const recCursor = await timeRun('recorded', 8805, '?after_id=2')
 assert(inst.frames === 4 && rec.frames === 4, '两种时序模式帧数一致', JSON.stringify({ inst, rec }))
 assert(inst.ms >= 0 && inst.ms < 200, 'instant 模式快速回放（<200ms）', inst.ms + 'ms')
 assert(rec.ms >= 500, 'recorded 模式按录制 deltaMs 回放（>=500ms）', rec.ms + 'ms')
+assert(recCursor.frames === 2, 'recorded+游标 after_id=2 → 2 帧（C/D）', JSON.stringify(recCursor))
+assert(recCursor.ms >= 120 && recCursor.ms < 450, 'recorded+游标首帧不等待前序时长（约 200ms，非 400ms+）', recCursor.ms + 'ms')
 
 // ---------- 4+5 采集器边界（本地合成，不依赖实站） ----------
 const pagesrv = http.createServer((rq, rs) => {

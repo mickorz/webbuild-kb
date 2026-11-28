@@ -33,3 +33,5 @@ workspace/*/regression/report/coverage-*.json
 
 # E02 差异排查临时归档副本（运行产物）
 dev-examples/**/tmp*/
+
+dev-examples/**/.run*/

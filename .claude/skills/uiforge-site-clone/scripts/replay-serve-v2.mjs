@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// serve-upgrade-version: 2.6
+// serve-upgrade-version: 2.7
 // UIForge replay server v2.6 — Batch 8 Replay Fidelity:
 //   1 SSE 游标：按 after_id 过滤（id > after_id），无新事件时返回空流（原站会保持长连接，差异已记录）
 //   2 JSON 事件游标：policy.cursor 声明的端点按指定字段过滤响应数组
@@ -39,9 +39,9 @@ const policyFor = (method, pathname) => {
   for (const r of POLICIES.rules || []) {
     if (r.method && r.method !== method) continue
     const re = new RegExp('^' + String(r.path).replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/:([A-Za-z_]+)/g, '[^/]+') + '$')
-    if (re.test(pathname)) return { mode: r.mode === 'latest' ? 'latest' : 'fifo', ignoreQuery: !!r.ignoreQuery }
+    if (re.test(pathname)) return { mode: r.mode === 'latest' ? 'latest' : 'fifo', ignoreQuery: !!r.ignoreQuery, cursor: r.cursor || null }
   }
-  return { mode: POLICIES.default === 'latest' ? 'latest' : 'fifo', ignoreQuery: false }
+  return { mode: POLICIES.default === 'latest' ? 'latest' : 'fifo', ignoreQuery: false, cursor: null }
 }
 const pick = (map, sig, mode) => {
   const a = map.get(sig)
@@ -70,9 +70,27 @@ const cursorFilter = (frames, afterId) => {
     return id > afterId
   })
 }
+// 流式 fixture 选择：同端点多份录制时取帧数最多的一份（避免拿已游标截断的样本当全集）
 const streamFor = (method, pathname) => {
   const m = STREAMS.filter(s => s.method === method && s.path === pathname && s.transport !== 'websocket')
-  return m.length ? m[m.length - 1] : null   // 同端点多份录制取最新（流式终态语义）
+  if (!m.length) return null
+  return m.reduce((a, b) => ((b.frames || 0) > (a.frames || 0) ? b : a))
+}
+// JSON 游标端点的基础数据：同样取事件条数最多的一份（同一原因）
+const fullestCache = new Map()
+const fullestFor = (method, pathname) => {
+  const key = method + ' ' + pathname
+  if (fullestCache.has(key)) return fullestCache.get(key)
+  const cands = byPath.get(key) || []
+  let best = null, bestLen = -1
+  for (const c of cands) {
+    try {
+      const arr = JSON.parse(readFileSync(path.join(HERE, 'files', c.file), 'utf8'))
+      if (Array.isArray(arr) && arr.length > bestLen) { best = c; bestLen = arr.length }
+    } catch {}
+  }
+  fullestCache.set(key, best)
+  return best
 }
 const replayStream = (res, st, afterId) => {
   let frames = []
@@ -84,7 +102,9 @@ const replayStream = (res, st, afterId) => {
   frames = cursorFilter(frames, afterId)   // 游标语义: 仅 id > after_id
   const sep = (st.contentType || '').includes('ndjson') ? '\n' : '\n\n'
   res.writeHead(st.status || 200, { 'content-type': st.contentType || 'text/event-stream', 'cache-control': 'no-store', 'access-control-allow-origin': '*', 'x-replay-stream': 'frames=' + frames.length + '/' + total + (afterId !== null ? ' after_id=' + afterId : '') })
-  let i = 0, lastT = 0
+  let i = 0
+  // 游标续读时间基准：过滤后首帧的 deltaMs 即新起点，否则会白等首帧前的时长
+  let lastT = frames.length ? (frames[0].deltaMs || 0) : 0
   const gap = (f) => {
     if (STREAM_MODE === 'recorded') return Math.max(0, (f.deltaMs || 0) - lastT)
     if (STREAM_MODE === 'scaled') return Math.max(0, ((f.deltaMs || 0) - lastT) * STREAM_SCALE)
@@ -172,6 +192,15 @@ http.createServer(async (req, res) => {
     console.error('  [replay] missing file for ' + e.url + ' → files/' + e.file)
     res.writeHead(404, { 'access-control-allow-origin': '*', 'cache-control': 'no-store' }); return res.end()
   }
+  // JSON 游标端点：先把基础数据换成「事件最全」的那份，再做游标过滤
+  if (e && policy.cursor) {
+    const fullest = fullestFor(req.method, pathnameOf(full))
+    if (fullest && fullest.file !== e.file) {
+      e = fullest
+      try { body = readFileSync(path.join(HERE, 'files', e.file)) } catch {}
+      console.error('  [replay] cursor-base switched to fullest recording (' + e.file + ')')
+    }
+  }
   // JSON 事件游标（policy.cursor 声明的端点）: 按字段过滤响应数组
   if (e && policy.cursor) {
     try {
@@ -180,7 +209,7 @@ http.createServer(async (req, res) => {
       if (Array.isArray(arr)) {
         const filtered = afterId > 0 ? arr.filter(x => Number(x[policy.cursor.field]) > afterId) : arr
         body = Buffer.from(JSON.stringify(filtered))
-        if (filtered.length !== arr.length) console.error('  [replay] cursor ' + policy.cursor.param + '=' + afterId + ' ' + pathnameOf(full) + ' ' + arr.length + '→' + filtered.length)
+        if (filtered.length !== arr.length || afterId > 0) console.error('  [replay] cursor ' + policy.cursor.param + '=' + afterId + ' ' + pathnameOf(full) + ' ' + arr.length + '→' + filtered.length)
       }
     } catch (err) { /* 非数组响应不动 */ }
   }
@@ -193,4 +222,4 @@ http.createServer(async (req, res) => {
   if (err.code === 'EADDRINUSE') console.error('\n  port ' + PORT + ' is busy — retry with:  PORT=' + (PORT + 1) + ' node serve.mjs\n')
   else console.error('\n  replay server error: ' + err.message + '\n')
   process.exit(1)
-}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.6 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + (STREAMS.length ? '  streams=' + STREAMS.length + ' mode=' + STREAM_MODE : '') + '\n'))
+}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.7 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + (STREAMS.length ? '  streams=' + STREAMS.length + ' mode=' + STREAM_MODE : '') + '\n'))
