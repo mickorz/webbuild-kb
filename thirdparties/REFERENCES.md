@@ -9,6 +9,7 @@
 | REF-001 | PrprprWarp | https://github.com/StarsailsClover/PrprprWarp.git | thirdparties/PrprprWarp | 1ba8f18f5e31641d586e75b53094c02d4782e3c7 (v26.0-Alpha.1) | MIT | 只读参考，研究方法论 | 网站离线镜像捕获方案：MV3 扩展、CDP 响应体捕获、DOM 序列化、Snapshot/Live 双视图回放 |
 | REF-002 | UIForge | https://github.com/TaewoooPark/UIForge.git | thirdparties/UIForge | 00eca2053ce8cbabdfddd7704d7067df9d0fcacd (v3.64.0) | MIT | 只读参考，研究方法论（本仓库当前主力抓取工具） | 网站复刻三产物管线：Archive（行为回放）/ Freeze（像素冻结）/ Restore（React 还原），零依赖 Playwright 工具链 |
 | REF-003 | browser-bridge | https://github.com/vitalysim/browser-bridge | thirdparties/browser-bridge | 35338b48c08231a154d651b18e8b74063322c010 (v0.19.2) | MIT | 只读参考，研究方法论 | AI 代理驱动真实登录浏览器：MCP 服务器 + MV3 扩展、网络捕获、会话录制 |
+| REF-004 | portless | https://github.com/vercel-labs/portless.git | thirdparties/portless | 83ed9d00cfdf352ea5056d31e9da774868c857c7 (v0.18.1-23) | Apache-2.0 | 只读参考，研究方法论 | 本地开发反代：给 dev server 分配稳定命名 https://*.localhost URL，替代端口号记忆，代理与多站点路由实现可参考 |
 
 ## Submodule 引入与登记流程
 

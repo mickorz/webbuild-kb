@@ -7,3 +7,7 @@
 [submodule "thirdparties/browser-bridge"]
 	path = thirdparties/browser-bridge
 	url = https://github.com/vitalysim/browser-bridge
+[submodule "thirdparties/portless"]
+	path = thirdparties/portless
+	url = https://github.com/vercel-labs/portless.git
+	branch = main
