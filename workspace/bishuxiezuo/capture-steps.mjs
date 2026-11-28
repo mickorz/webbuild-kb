@@ -173,7 +173,12 @@ else for (const step of steps) {
         let el = b
         for (let i = 0; i < 8 && el; i++) {
           el = el.parentElement
-          if (el && (el.textContent || '').includes(t) && el.querySelectorAll('.bc-open').length === 1) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
+          if (el && (el.textContent || '').includes(t) && el.querySelectorAll('.bc-open').length === 1) {
+            const btn = el.querySelector('.bc-open')
+            const br = btn ? btn.getBoundingClientRect() : null
+            const r = (br && br.width > 2 && br.height > 2) ? br : el.getBoundingClientRect()
+            return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+          }
         }
       }
       return null

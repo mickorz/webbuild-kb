@@ -1,0 +1,61 @@
+/* Extends the current writing surface and revision drawer. */
+.pd-notice{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;margin-bottom:24px;border:1px solid var(--line);border-left:3px solid var(--slate);border-radius:6px;background:var(--paper-2,#f7f4ed);color:var(--ink-2)}
+.pd-notice>div{display:flex;gap:6px}
+.pd-workspace{height:100%;min-width:0;min-height:0;display:flex;flex-direction:column}
+.pd-reader-shell{display:flex;flex:1;flex-direction:column;min-width:0;min-height:0;--pd-fast:140ms;--pd-ease:cubic-bezier(.22,1,.36,1)}
+.pd-workspace-head{display:flex;flex:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;min-height:38px}
+.pd-workspace-context{display:flex;align-items:center;flex-wrap:wrap;gap:18px;min-width:0}
+.pd-workspace-head h2{margin:0;font-family:var(--serif);font-size:21px;font-weight:500}
+.pd-layout,.pd-tabs{display:inline-grid;grid-template-columns:repeat(2,minmax(0,1fr));flex:none;position:relative;padding:3px;border:1px solid var(--line);border-radius:6px;background:var(--paper-3,#eee8db)}
+.pd-layout{margin-left:auto}
+.pd-segment-indicator{position:absolute;left:3px;top:3px;bottom:3px;width:calc((100% - 6px)/2);border-radius:4px;background:var(--card,var(--paper));box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 7%,transparent);pointer-events:none;transition:transform var(--pd-fast) var(--pd-ease)}
+.pd-layout button,.pd-tabs button{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;min-width:66px;min-height:30px;padding:6px 12px;border:0;border-radius:4px;background:transparent;font:inherit;font-size:12px;line-height:1.3;color:var(--ink-3);cursor:pointer;transition:color var(--pd-fast) var(--pd-ease)}
+.pd-tabs button{flex-direction:column;min-width:94px;min-height:43px}
+.pd-tabs small{min-height:1.3em;font-size:10px;color:var(--ink-3);font-weight:400;white-space:nowrap}
+.pd-tabs button[aria-selected=true],.pd-layout button[aria-pressed=true]{color:var(--gold-deep)}
+.pd-reader{display:flex;flex:1;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:6px;background:var(--paper,#fffdf8)}
+.pd-pages{display:grid;grid-template-columns:minmax(0,1fr);flex:1;min-height:0;overflow:hidden}
+.pd-pages.dual{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pd-page{display:flex;flex-direction:column;min-width:0;min-height:0}
+.pd-pages.dual .pd-page+.pd-page{border-left:1px solid var(--line)}
+.pd-page-head{display:flex;flex:none;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;min-height:69px;padding:10px 20px;border-bottom:1px solid var(--line-2,var(--line));background:var(--paper-2,#f7f4ed)}
+.pd-page-identity{display:flex;align-items:center;gap:10px;color:var(--ink-2);white-space:nowrap}
+.pd-page-identity b{font-size:13px;font-weight:500}
+.pd-page-identity small,.pd-page-actions>small{font-size:11px;color:var(--ink-3)}
+.pd-page-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-left:auto}
+.pd-page-actions .c-btn{flex:none;font-size:12px;white-space:nowrap}
+.pd-read-single{border:0;background:transparent;padding:6px 0;color:var(--ink-3);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}
+.pd-read-single:hover{color:var(--gold-deep)}
+.pd-text-scroll{flex:1;min-height:0;overflow-y:auto;position:relative;scrollbar-gutter:stable;overscroll-behavior:contain;padding:28px 30px 12px}
+.pd-text{white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--serif);font-size:17px;line-height:2;max-width:760px;margin:0 auto;padding-bottom:12px}
+.pd-text p{margin:0 0 22px;text-indent:2em}
+.pd-pages.dual .pd-text-scroll{padding:24px 24px 8px}
+.pd-pages.dual .pd-text{font-size:16px}
+.pd-pages.dual .pd-text p{margin-bottom:20px}
+.pd-reader-foot{display:flex;flex:none;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding:12px 20px;color:var(--ink-3)}
+.pd-reader-foot small{font-size:11px}
+.pd-empty{padding:30px 20px;color:var(--ink-3);font-size:13px;text-align:center}
+.pd-message{flex:none;padding:12px 16px;font-size:13px;color:var(--ink-2);background:var(--paper-2,#f7f4ed)}
+.pd-message[role=alert]{color:var(--terra)}
+.pd-recovery{display:flex;flex:none;flex-wrap:wrap;gap:8px;padding:10px 16px}
+.pd-history-tabs{display:flex;flex:none;gap:8px;padding:12px 20px;border-bottom:1px solid var(--line)}
+.pd-history-tabs button[aria-pressed=true]{border-color:var(--gold-deep);color:var(--gold-deep)}
+.pd-history .wh-list{width:210px}
+.pd-history .pd-reader{border:0;border-radius:0}
+.pd-history .wh-detail{overflow:hidden}
+.pd-round{display:flex;flex-direction:column;gap:7px;text-align:left;border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--paper,#fffdf8);color:var(--ink-2);font:inherit;cursor:pointer}
+.pd-round b{font-size:13px;font-weight:500}
+.pd-round span{font-size:12px;color:var(--ink-3)}
+.pd-round.active{border-color:var(--gold-deep);background:var(--paper-2,#f7f4ed)}
+.pd-reader-shell button:focus-visible,.pd-history button:focus-visible{outline:2px solid var(--gold-deep);outline-offset:3px}
+.pd-text-scroll:focus-visible{outline:2px solid var(--gold-deep);outline-offset:-3px}
+.pd-reader-shell[data-compact=true] .pd-workspace-head{margin-bottom:14px}
+.pd-reader-shell[data-compact=true] .pd-workspace-context{gap:12px}
+.pd-reader-shell[data-compact=true] .pd-workspace-head h2{font-size:19px}
+.pd-reader-shell[data-compact=true] .pd-page-head{padding:10px 12px;gap:8px}
+.pd-reader-shell[data-compact=true] .pd-tabs button{min-width:82px}
+.pd-reader-shell[data-compact=true] .pd-page-actions .c-btn{font-size:11px;padding:6px 9px}
+.pd-reader-shell[data-compact=true] .pd-text-scroll{padding:22px 20px 8px}
+.pd-reader-shell[data-compact=true] .pd-reader-foot{padding:10px 12px}
+@media(max-width:760px){.pd-history .wh-list{width:auto;max-height:145px;flex-direction:row;overflow:auto}.pd-round{min-width:145px}.pd-notice{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.pd-reader-shell *,.pd-reader-shell *::before,.pd-reader-shell *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// serve-upgrade-version: 2.5
-// UIForge replay server v2.5 — 在 v2.4 基础上加 Stream Replay（Batch 7）:
-//   archive/streams/manifest.json 登记的 SSE / NDJSON 端点按帧回放（保持事件顺序与原始帧文本），
-//   不再把流式数据拼成一次性 JSON。WebSocket 回放暂不支持（manifest 中标记 transport=websocket 时跳过）。
-// v2.3/v2.4 既有能力不变：同签名 FIFO、query 归一化、歧义拒绝、原始 5xx、截断请求体不指纹、Endpoint Replay Policy。
+// serve-upgrade-version: 2.6
+// UIForge replay server v2.6 — Batch 8 Replay Fidelity:
+//   1 SSE 游标：按 after_id 过滤（id > after_id），无新事件时返回空流（原站会保持长连接，差异已记录）
+//   2 JSON 事件游标：policy.cursor 声明的端点按指定字段过滤响应数组
+//   3 回放时序模式 REPLAY_STREAM_MODE=instant|recorded|scaled（recorded 按录制 deltaMs，scaled 按倍率）
+// v2.5 既有能力不变：事件级流回放、Endpoint Policy、FIFO、歧义拒绝、原始 5xx。
 //   1 同签名多响应 FIFO: 归档允许同 key 多条目（同一请求在不同业务状态下的不同响应），按请求顺序消费，超出后停在最后一版
 //   2 Query 排序归一化: 参数顺序不同视为同一 URL，消除顺序误判
 //   3 歧义检测: URL 级宽松回退命中多个不同变体时拒绝猜测（599 + 留痕），唯一候选才允许回退且留痕
@@ -57,24 +58,46 @@ const UNMATCHED = path.join(HERE, 'unmatched-requests.jsonl')
 // Stream fixtures: SSE / NDJSON 端点（见 archive/streams/manifest.json）
 const STREAMS = (() => { try { return JSON.parse(readFileSync(path.join(HERE, 'streams', 'manifest.json'), 'utf8')) } catch { return [] } })()
 const STREAM_DELAY = +(process.env.REPLAY_STREAM_DELAY || 5)   // 帧间延迟(ms)，让客户端能观察到增量
+// 时序模式: instant（尽快）/ recorded（按录制 deltaMs）/ scaled（deltaMs × REPLAY_STREAM_SCALE）
+const STREAM_MODE = (process.env.REPLAY_STREAM_MODE || 'instant').toLowerCase()
+const STREAM_SCALE = +(process.env.REPLAY_STREAM_SCALE || 0.1)
+const cursorFilter = (frames, afterId) => {
+  if (afterId === null || afterId === '' || Number.isNaN(afterId) || afterId <= 0) return frames
+  return frames.filter(f => {
+    const m = /(?:^|\n)(?:id|ID):\s*(\d+)/.exec(f.raw || '')
+    const id = m ? Number(m[1]) : null
+    if (id === null) { try { const j = JSON.parse(String(f.raw).replace(/^[^\{]*/, '')); if (typeof j.id === 'number') return j.id > afterId } catch {} return false }
+    return id > afterId
+  })
+}
 const streamFor = (method, pathname) => {
   const m = STREAMS.filter(s => s.method === method && s.path === pathname && s.transport !== 'websocket')
   return m.length ? m[m.length - 1] : null   // 同端点多份录制取最新（流式终态语义）
 }
-const replayStream = (res, st) => {
+const replayStream = (res, st, afterId) => {
   let frames = []
   try { frames = readFileSync(path.join(HERE, 'streams', st.file), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) } catch (e) {
     console.error('  [replay] stream fixture missing for ' + st.path + ' → streams/' + st.file)
     res.writeHead(404, { 'access-control-allow-origin': '*' }); return res.end()
   }
+  const total = frames.length
+  frames = cursorFilter(frames, afterId)   // 游标语义: 仅 id > after_id
   const sep = (st.contentType || '').includes('ndjson') ? '\n' : '\n\n'
-  res.writeHead(st.status || 200, { 'content-type': st.contentType || 'text/event-stream', 'cache-control': 'no-store', 'access-control-allow-origin': '*', 'x-replay-stream': 'frames=' + frames.length })
-  let i = 0
+  res.writeHead(st.status || 200, { 'content-type': st.contentType || 'text/event-stream', 'cache-control': 'no-store', 'access-control-allow-origin': '*', 'x-replay-stream': 'frames=' + frames.length + '/' + total + (afterId !== null ? ' after_id=' + afterId : '') })
+  let i = 0, lastT = 0
+  const gap = (f) => {
+    if (STREAM_MODE === 'recorded') return Math.max(0, (f.deltaMs || 0) - lastT)
+    if (STREAM_MODE === 'scaled') return Math.max(0, ((f.deltaMs || 0) - lastT) * STREAM_SCALE)
+    return STREAM_DELAY   // instant
+  }
   const next = () => {
     if (i >= frames.length) return res.end()
-    res.write(frames[i].raw + sep)
+    const f = frames[i]
+    const wait = gap(f)          // 必须在更新 lastT 之前算差（否则恒为 0）
+    res.write(f.raw + sep)
+    lastT = f.deltaMs || lastT
     i++
-    setTimeout(next, STREAM_DELAY)
+    setTimeout(next, Math.min(wait, 60000))
   }
   next()
 }
@@ -102,7 +125,12 @@ http.createServer(async (req, res) => {
   const missBase = { method: req.method, url: idx.origin + req.url, bodyHash: bh || null, bodyLen: rb ? rb.buf.length : 0 }
   // 流式端点优先：按 method + pathname 匹配（忽略 after_id 等进度参数），事件级回放
   const st = streamFor(req.method, pathnameOf(full))
-  if (st) { console.error('  [replay] stream ' + req.method + ' ' + req.url + ' → frames=' + st.frames); return replayStream(res, st) }
+  if (st) {
+    let afterId = null
+    try { const q = new URL(full).searchParams.get('after_id'); if (q !== null) afterId = Number(q) } catch {}
+    console.error('  [replay] stream ' + req.method + ' ' + req.url + ' → frames=' + st.frames + (afterId !== null ? ' after_id=' + afterId : ''))
+    return replayStream(res, st, afterId)
+  }
   let sigP = null; try { sigP = req.method + ' ' + new URL(full).pathname } catch {}
   let e = null, loose = null
   const policy = policyFor(req.method, pathnameOf(full))   // Endpoint Replay Policy
@@ -144,6 +172,18 @@ http.createServer(async (req, res) => {
     console.error('  [replay] missing file for ' + e.url + ' → files/' + e.file)
     res.writeHead(404, { 'access-control-allow-origin': '*', 'cache-control': 'no-store' }); return res.end()
   }
+  // JSON 事件游标（policy.cursor 声明的端点）: 按字段过滤响应数组
+  if (e && policy.cursor) {
+    try {
+      const afterId = Number(new URL(full).searchParams.get(policy.cursor.param) || '0')
+      const arr = JSON.parse(body.toString('utf8'))
+      if (Array.isArray(arr)) {
+        const filtered = afterId > 0 ? arr.filter(x => Number(x[policy.cursor.field]) > afterId) : arr
+        body = Buffer.from(JSON.stringify(filtered))
+        if (filtered.length !== arr.length) console.error('  [replay] cursor ' + policy.cursor.param + '=' + afterId + ' ' + pathnameOf(full) + ' ' + arr.length + '→' + filtered.length)
+      }
+    } catch (err) { /* 非数组响应不动 */ }
+  }
   const h = Object.assign({}, e.headers, { 'access-control-allow-origin': '*', 'cache-control': 'no-store' })
   for (const k of Object.keys(h)) h[k] = String(h[k]).replace(/[\r\n]+\s*/g, ', ')
   if ((e.ct || '').includes('text/html')) { let s = body.toString('utf8').replace(/<head[^>]*>/i, m => m + inject); body = Buffer.from(s) }
@@ -153,4 +193,4 @@ http.createServer(async (req, res) => {
   if (err.code === 'EADDRINUSE') console.error('\n  port ' + PORT + ' is busy — retry with:  PORT=' + (PORT + 1) + ' node serve.mjs\n')
   else console.error('\n  replay server error: ' + err.message + '\n')
   process.exit(1)
-}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.5 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + (STREAMS.length ? '  streams=' + STREAMS.length : '') + '\n'))
+}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.6 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + (STREAMS.length ? '  streams=' + STREAMS.length + ' mode=' + STREAM_MODE : '') + '\n'))

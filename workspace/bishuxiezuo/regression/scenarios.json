@@ -265,6 +265,10 @@
         {
           "kind": "query-variant-fallback",
           "path": "/console/console.css"
+        },
+        {
+          "kind": "policy-query-ignore",
+          "path": "/api/engine-tasks/:id/events"
         }
       ]
     },

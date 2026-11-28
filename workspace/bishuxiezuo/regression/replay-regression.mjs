@@ -33,7 +33,7 @@ const archiveDir = resolve(HERE, val('--archive') || '../archive-bishu')
 const scenPath = resolve(HERE, val('--scenarios') || './scenarios.json')
 const outDir = resolve(HERE, val('--out') || './report')
 const DEFAULT_FORBID = ['unmatched', 'ambiguous-body-variant', 'ambiguous-query-variant']
-const FALLBACK_KINDS = ['body-variant-fallback', 'query-variant-fallback', 'request-body-truncated']
+const FALLBACK_KINDS = ['body-variant-fallback', 'query-variant-fallback', 'request-body-truncated', 'policy-query-ignore']
 
 if (!existsSync(join(archiveDir, 'index.json'))) { console.error('归档不存在:', archiveDir); process.exit(1) }
 const conf = JSON.parse(readFileSync(scenPath, 'utf8'))
@@ -84,6 +84,11 @@ const checkField = (body, spec) => {
 }
 const normPathQ = u => { try { const x = new URL(u); const sp = [...x.searchParams.entries()].sort((p, q) => p[0] < q[0] ? -1 : p[0] > q[0] ? 1 : 0); return x.pathname + (sp.length ? '?' + sp.map(([k, v]) => k + '=' + v).join('&') : '') } catch { return u } }
 const pathOf = u => { try { return new URL(u).pathname } catch { return u } }
+const patternMatch = (pat, pathname) => {
+  if (pat === pathname) return true
+  const re = new RegExp('^' + String(pat).replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/:([A-Za-z_]+)/g, '[^/]+') + '$')
+  return re.test(pathname)
+}
 const sha12 = s => createHash('sha256').update(s || '').digest('hex').slice(0, 12)
 // 变体感知匹配: method + pathname + 可选 query 逐项 + 可选请求体完全一致（Batch 5.1）
 const findCapture = (net, a) => {
@@ -163,7 +168,12 @@ for (const sc of conf.scenarios) {
                 for (let i = 0; i < 8 && el; i++) {
                   el = el.parentElement
                   // 容器必须只含 1 个 .bc-open，否则会命中整个列表容器而点到相邻书籍
-                  if (el && (el.textContent || '').includes(t) && el.querySelectorAll('.bc-open').length === 1) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
+                  if (el && (el.textContent || '').includes(t) && el.querySelectorAll('.bc-open').length === 1) {
+                    const btn = el.querySelector('.bc-open')
+                    const br = btn ? btn.getBoundingClientRect() : null
+                    const r = (br && br.width > 2 && br.height > 2) ? br : el.getBoundingClientRect()   // 优先按钮自身，规避卡片高度差异
+                    return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+                  }
                 }
               }
               return null
@@ -235,7 +245,7 @@ for (const sc of conf.scenarios) {
       // fallback 白名单: 只允许明确登记的回退，其余直接失败（Batch 5.1）
       const fallbacks = newUn.filter(u => FALLBACK_KINDS.includes(u.kind))
       const registered = sc.expectedFallbacks || []
-      const unreg = fallbacks.filter(u => !registered.some(r => r.kind === u.kind && pathOf(u.url) === r.path))
+      const unreg = fallbacks.filter(u => !registered.some(r => r.kind === u.kind && patternMatch(r.path, pathOf(u.url))))
       add('L3', 'fallback 白名单', unreg.length === 0, unreg.length ? unreg.map(u => u.kind + ' ' + u.url).join('; ') : `全部命中登记（${fallbacks.length} 条）`)
       const maxErr = sc.maxConsoleErrors ?? 0
       // 资源类 console 噪声不计入: net::ERR_FAILED 是我们拦截第三方依赖造成的；404 由下方专项检查接管
@@ -286,7 +296,7 @@ for (const sc of conf.scenarios) {
       const bad = newUn.filter(u => forbid.includes(u.kind))
       add('L3', 'forbid ' + (forbid.join('/') || '无'), bad.length === 0, bad.map(b => b.kind + ' ' + b.url).join('; '))
       const fallbacks = newUn.filter(u => FALLBACK_KINDS.includes(u.kind))
-      const unreg = fallbacks.filter(u => !(sc.expectedFallbacks || []).some(r => r.kind === u.kind && pathOf(u.url) === r.path))
+      const unreg = fallbacks.filter(u => !(sc.expectedFallbacks || []).some(r => r.kind === u.kind && patternMatch(r.path, pathOf(u.url))))
       add('L3', 'fallback 白名单', unreg.length === 0, unreg.length ? unreg.map(u => u.kind + ' ' + u.url).join('; ') : `全部命中登记（${fallbacks.length} 条）`)
     } catch (e) { add('L2', 'api 场景执行异常', false, String(e).slice(0, 300)) }
   }

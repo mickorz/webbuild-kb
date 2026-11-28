@@ -1,0 +1,13 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/engine-tasks/ede1a766-b7b6-48db-af5c-d851404a637e/stream",
+    "url": "https://bishuxiezuo.cn/api/engine-tasks/ede1a766-b7b6-48db-af5c-d851404a637e/stream?after_id=0",
+    "status": 200,
+    "contentType": "text/event-stream; charset=utf-8",
+    "transport": "fetch-sse",
+    "file": "api/engine-tasks/ede1a766-b7b6-48db-af5c-d851404a637e/stream.bd7bd269dbcd.jsonl",
+    "frames": 22,
+    "terminal": "eof"
+  }
+]

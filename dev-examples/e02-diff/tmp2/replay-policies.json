@@ -1,0 +1,29 @@
+{
+  "_comment": "Endpoint Replay Policy — 决定已精确匹配的同签名多响应如何挑选。规则只作用于『同一请求签名内部的版本选择』，不绕过 v2.3 的指纹匹配与歧义拒绝。default=fifo 保持旧行为（向后兼容）。",
+  "default": "fifo",
+  "rules": [
+    {
+      "method": "GET",
+      "path": "/api/books",
+      "mode": "latest",
+      "reason": "书架是当前快照，回放应呈现最终状态而非建书前的历史版本"
+    },
+    {
+      "method": "GET",
+      "path": "/api/books/:id/world",
+      "mode": "latest",
+      "reason": "世界观是当前快照；铸造过程中会产生 building 态中间版本"
+    },
+    {
+      "method": "GET",
+      "path": "/api/engine-tasks/:id/events",
+      "mode": "latest",
+      "ignoreQuery": true,
+      "reason": "任务事件进度轮询；after_id 每次不同，离线副本无真实任务，应返回录制的最终事件批次",
+      "cursor": {
+        "param": "after_id",
+        "field": "id"
+      }
+    }
+  ]
+}

@@ -118,3 +118,7 @@ index.json 允许同 key 多条目：同一请求签名（METHOD + 归一化URL 
 - `thirdparties/browser-bridge/docs/WATCH.md` — Watch Mode 网络捕获能力（Phase 2 依据）
 - Playwright HAR 录制与回放：https://playwright.dev/docs/mock
 - Browser Bridge 仓库：https://github.com/vitalysim/browser-bridge（thirdparties 固定 commit 35338b4，v0.19.2，MIT）
+
+## 补充（Batch 8）：routeFromHAR 的定位
+
+Playwright HAR 仅作为**辅助对照**方案，不替换自建 Replay。现有能力（请求体指纹匹配、FIFO/latest 端点策略、歧义拒绝、SSE 事件级回放与游标语义）是 HAR 无法覆盖的核心；HAR 更适合做外部工具互操作与第三方比对基线。

@@ -1,0 +1,28 @@
+/* B overview: open summary rows, with only the expanded editor tinted. */
+.asst-personalization-overview { min-width: 0; max-width: 790px; border-top: 1px solid var(--line); }
+.asst-settings .asst-personalization-overview .asst-personalization-group { margin: 0; padding: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; min-width: 0; }
+.asst-settings .asst-personalization-overview .asst-personalization-group.is-open { padding-inline: 18px; margin-inline: -18px; background: color-mix(in srgb, var(--gold-deep) 5%, var(--paper)); }
+.asst-settings .asst-personalization-overview .asst-personalization-group > .c-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  width: 100%; min-height: 89px; padding: 17px 0; border: 0; border-radius: 0;
+  background: transparent; color: var(--ink); text-align: left; white-space: normal;
+}
+.asst-settings .asst-personalization-overview .asst-personalization-group > .c-btn:hover:not(:disabled) { background: transparent; color: var(--gold-deep); }
+.asst-personalization-group > .c-btn > span { min-width: 0; flex: 1; }
+.asst-personalization-group > .c-btn strong { font: 600 14px/1.5 var(--sans); }
+.asst-personalization-group > .c-btn > svg { flex-shrink: 0; color: var(--ink-3); }
+.asst-personalization-group.is-open > .c-btn strong, .asst-personalization-group.is-open > .c-btn > svg { color: var(--gold-deep); }
+.asst-settings .asst-personalization-overview .asst-personalization-group > .c-btn small { display: block; margin-top: 5px; max-width: 70ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-3); font: 400 12px/1.6 var(--sans); }
+.asst-personalization-overview .asst-personalization-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; padding-bottom: 21px; }
+.asst-personalization-overview .asst-personalization-field--wide { grid-column: 1 / -1; }
+.asst-personalization-overview .asst-personalization-custom { padding-bottom: 21px; }
+.asst-personalization-overview .asst-personalization-custom textarea { margin-top: 0; }
+.asst-personalization-savebar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; max-width: 790px; padding: 18px 0; color: var(--ink-3); font: 12px var(--sans); }
+.asst-personalization-savebar > span:first-child { margin-right: auto; }
+.asst-personalization-savebar .asst-settings-count { margin-left: 0; }
+@container asst-personalization (max-width: 540px) {
+  .asst-personalization-overview .asst-personalization-fields { grid-template-columns: 1fr; }
+  .asst-settings .asst-personalization-overview .asst-personalization-group.is-open { padding-inline: 10px; margin-inline: -10px; }
+}
+.asst-personalization-history-scrim { z-index: 940; }
+.c-confirm-scrim:has(.asst-personalization-confirm) { z-index: 960; }

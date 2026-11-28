@@ -1,0 +1,529 @@
+/* Phone frame (FD-176). The UI Vault frame owns the title bar, bottom tabs, safe areas and keyboard;
+   desktop screens rendered inside it drop their own chrome and fixed heights. */
+
+/* ---------- desktop chrome inside the frame ---------- */
+.lf-mobile .cscreen{display:block;height:auto!important;min-height:100%;overflow:visible}
+.lf-mobile .c-rail,.lf-mobile .c-top,.lf-mobile .c-topbar,.lf-mobile .tree-toggle,.lf-mobile .c-sidestrip{display:none!important}
+.lf-mobile .c-view,.lf-mobile .c-main,.lf-mobile .c-write,.lf-mobile .c-write-stage{display:block;height:auto;min-height:0;overflow:visible}
+/* The page-in animation animates a transform, which makes the page the containing block of every
+   full-screen overlay inside it (even when its final value is overridden); phones skip it. */
+.lf-mobile .c-view{transform:none!important;animation:none!important}
+/* Desktop side drawers (history, revisions) open full width on phones. */
+.lf-mobile .cr-drawer,[data-mobile] .cr-drawer{width:100%!important;max-width:100%!important;border-left:0}
+.lf-mobile .c-body{height:auto;overflow:visible!important;padding:16px!important}
+/* The chapter directory is its own phone page; the desktop tree drawer never shows. */
+.lf-mobile .c-tree,.lf-mobile .tree-scrim{display:none!important}
+/* Writing actions and the inline edit entry live in the page action bar and the "more" sheet. */
+.lf-mobile .write-actions,.lf-mobile .wd-toggle,.lf-mobile .wd-acts{display:none!important}
+.lf-mobile [data-m-page="chapter"] .lvl-band{display:none}
+/* Editable fields: a visible tappable edit control; keyboard and double-click hints do not apply on touch. */
+.lf-mobile .edt-hint--tap{position:static;display:flex;width:max-content;min-height:28px;margin:6px 0 0 auto;padding:0 10px;opacity:1;transform:none;pointer-events:auto;font-size:12px;cursor:pointer}
+.lf-mobile .edt-row .edt-hint--tap,.lf-mobile .edt-ibrow .edt-hint--tap,.lf-mobile .edt-stat .edt-hint--tap{transform:none}
+.lf-mobile .edt-globalhint,.lf-mobile .edt-tip{display:none}
+/* The field rewrite panel is portaled to <body>; on phones it docks to the bottom instead of floating over the field actions. */
+@media(max-width:620px){.edt-agent{left:0!important;right:0;top:auto!important;bottom:0;width:auto!important;max-width:none!important;max-height:55dvh;overflow:auto;border-radius:16px 16px 0 0!important;padding-bottom:env(safe-area-inset-bottom,0px)}}
+@media(max-width:620px){.edt-agent{height:auto!important}.edt-agent .edt-airow{align-items:center}.edt-agent .edt-aiinput{height:44px!important;min-height:44px!important}.edt-agent .edt-go{min-height:44px}}
+/* Run progress overlays grow with their card instead of the short phone page they cover. */
+.lf-mobile .c-runoverlay{bottom:auto;min-height:100%;overflow:visible;place-items:start center;padding:12px}
+.lf-mobile .c-runoverlay>*{position:sticky;top:12px}
+/* Settings and inbox use the frame title; the inbox keeps its mark-all-read action. */
+.lf-mobile .set-nav{display:none!important}
+.lf-mobile .set-wrap{display:block;height:auto}
+.lf-mobile .set-body{padding:16px 16px 24px!important;overflow:visible}
+.lf-mobile .set-panel-t{display:none}
+.lf-mobile .inbox-page{width:auto;padding:4px 16px 20px;overflow:visible}
+.lf-mobile .inbox-head{display:none}
+.lf-mobile .inbox-filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.lf-mobile .inbox-filters::-webkit-scrollbar{display:none}
+/* Message cards: no kind icon (the label already names it), time on its own line, swipe left to delete. */
+.lf-mobile .inbox-card{grid-template-columns:minmax(0,1fr);transition:transform .2s var(--ease)}
+.lf-mobile .inbox-type-icon{display:none}
+.lf-mobile .inbox-card-main header{flex-wrap:wrap;padding-right:0}
+.lf-mobile .inbox-card-main header time{order:9;flex-basis:100%;font-size:11px}
+.lf-mobile .inbox-swipe{position:relative;border-radius:11px;overflow:hidden}
+.lf-mobile .inbox-swipe.is-open{background:var(--terra)}
+.lf-mobile .inbox-swipe:not(.is-open) .inbox-swipe-delete{opacity:0}
+.lf-mobile .inbox-swipe>.inbox-card{position:relative;z-index:1;touch-action:pan-y}
+.lf-mobile .inbox-swipe-delete{position:absolute;top:0;right:0;bottom:0;width:84px;border:0;background:var(--terra);color:#fff;font:600 13px var(--sans);cursor:pointer}
+@media(prefers-reduced-motion:reduce){.lf-mobile .inbox-card{transition:none}}
+
+/* ---------- task bar ---------- */
+.lf-mobile .mobile-shell-accessory:empty{display:none}
+.lf-mobile .bg-taskdock--bar{position:static;max-width:none;max-height:none}
+.bg-taskdock--bar .bg-pill{width:100%;justify-content:flex-start;gap:10px;padding:10px 14px;border-radius:12px;box-shadow:none}
+.bg-taskdock--bar .bg-pill-label{flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bg-taskdock--bar .bg-card{width:auto;max-height:40dvh;box-shadow:none}
+
+/* ---------- frame parts owned by the console ---------- */
+.lf-mobile .m-icon-button{display:grid;place-items:center;min-width:44px;height:44px;padding:0 6px;border:0;border-radius:10px;background:none;color:var(--ink);font-size:20px;cursor:pointer}
+.lf-mobile .m-tab-seal{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--gold-deep);color:#fff;font-size:12px}
+.lf-mobile .m-actionbar{display:flex;gap:8px;padding:8px 16px;border-top:1px solid var(--line);background:var(--paper)}
+.lf-mobile .m-actionbar .c-btn{flex:1;min-height:44px;justify-content:center}
+.m-action-list{display:flex;flex-direction:column}
+.m-action-list>button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 4px;border:0;border-bottom:1px solid var(--line-2);background:none;color:var(--ink);font:500 15px var(--sans);text-align:left;cursor:pointer}
+.m-action-list>button:last-child{border-bottom:0}
+.m-action-list>button:disabled{color:var(--ink-3);cursor:default}
+.lf-mobile .m-segment{display:flex;margin:12px 16px 0;padding:3px;border-radius:10px;background:var(--paper-3)}
+.lf-mobile .m-segment button{flex:1;min-height:36px;border:0;border-radius:8px;background:none;color:var(--ink-3);font:500 14px var(--sans);cursor:pointer}
+.lf-mobile .m-segment button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px var(--shadow)}
+
+/* ---------- shelf ---------- */
+.lf-mobile .m-shelf{display:flex;flex-direction:column;gap:10px;padding:12px 16px 20px}
+.lf-mobile .m-book{display:flex;align-items:flex-start;gap:4px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.lf-mobile .m-book-open{flex:1;min-width:0;display:flex;gap:12px;padding:12px;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
+.lf-mobile .m-book-cover{flex:none;width:54px;height:72px;padding:6px;border-radius:6px;color:rgba(255,255,255,.96);font-size:12px;font-weight:600;line-height:1.15;writing-mode:vertical-rl;overflow:hidden}
+.lf-mobile .m-book-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lf-mobile .m-book-title{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lf-mobile .m-book-meta{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lf-mobile .m-book-badge{align-self:flex-start;margin-top:3px}
+.lf-mobile .m-book .m-icon-button{margin:6px 4px 0 0;color:var(--ink-3)}
+.lf-mobile .m-empty{display:flex;flex-direction:column;align-items:center;gap:14px;padding:64px 24px;color:var(--ink-3)}
+
+/* ---------- shared phone atoms ---------- */
+/* Title-bar text actions keep the 44px touch area but read as text, like a phone navigation bar. */
+.lf-mobile .title-bar-actions .c-btn{border:0;background:none;box-shadow:none;padding:0 12px;color:var(--gold-deep);font-weight:600}
+.lf-mobile .title-bar-actions .c-btn:disabled{color:var(--ink-3);opacity:1}
+.lf-mobile .title-bar-actions .c-btn.m-new-book{gap:4px;height:34px;min-height:34px;padding:0 14px;border-radius:8px;background:var(--gold-deep);color:#fff}
+.lf-mobile a.c-btn{text-decoration:none}
+/* The chapter title lives in the title bar; the page does not repeat it. */
+.lf-mobile [data-m-page="chapter"] .dtitle-row{display:none}
+.lf-mobile .m-muted{font-size:12px;color:var(--ink-3)}
+.lf-mobile .m-card{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.lf-mobile .m-card-title{font-size:14.5px;font-weight:600;color:var(--ink)}
+.lf-mobile .m-section-label{margin:6px 4px -4px;font:500 12px var(--sans);color:var(--ink-3)}
+.lf-mobile .m-row-value{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
+.lf-mobile .m-row-value+.m-row-chevron{margin-left:4px}
+.lf-mobile .m-row-more{justify-content:center;color:var(--gold-deep)}
+.lf-mobile .m-link{margin-left:6px;padding:0;border:0;background:none;color:var(--gold-deep);font:inherit;cursor:pointer}
+.lf-mobile .m-stage{flex:none;padding:2px 8px;border-radius:10px;background:var(--paper-3);color:var(--ink-3);font-size:11.5px;white-space:nowrap}
+.lf-mobile .m-stage--outline{background:var(--slate-wash,var(--paper-3));color:var(--slate,var(--ink-2))}
+.lf-mobile .m-stage--prose{background:var(--gold-wash,var(--paper-3));color:var(--gold-deep)}
+.lf-mobile .m-stage--final{background:var(--sage-wash,var(--paper-3));color:var(--sage,var(--ink-2))}
+.lf-mobile .m-chapter-row{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:0 14px;border:0;border-top:1px solid var(--line-2);background:none;color:var(--ink);font:500 14px var(--sans);text-align:left;cursor:pointer}
+.lf-mobile .m-group>.m-chapter-row:first-child{border-top:0}
+.lf-mobile .m-chapter-row.is-current{background:var(--gold-wash,var(--paper-2))}
+.lf-mobile .m-chapter-no{flex:none;width:52px;font-size:12px;color:var(--gold-deep)}
+.lf-mobile .m-chapter-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lf-mobile .m-chapter-words{flex:none;font-size:12px;color:var(--ink-3)}
+
+/* ---------- work home ---------- */
+.lf-mobile .m-home{display:flex;flex-direction:column;gap:12px;padding:4px 16px 20px}
+.lf-mobile .m-home-meta{font-size:12.5px;color:var(--ink-3)}
+.lf-mobile .m-continue{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--gold-soft);border-radius:12px;background:var(--gold-wash,var(--paper-2));color:var(--ink)}
+.lf-mobile .m-continue-label,.lf-mobile .m-continue-meta{font-size:12px;color:var(--ink-3)}
+.lf-mobile .m-continue-title{font-size:18px;font-weight:600}
+.lf-mobile .m-continue-actions{display:flex;gap:8px;margin-top:10px}
+.lf-mobile .m-continue-actions .c-btn{flex:1;min-height:42px;justify-content:center}
+.lf-mobile .m-progress-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lf-mobile .m-meter{height:6px;margin-top:10px;border-radius:3px;background:var(--paper-3);overflow:hidden}
+.lf-mobile .m-meter i{display:block;height:100%;background:var(--gold)}
+.lf-mobile .m-progress-next{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:10px;padding:8px 0 0;border:0;border-top:1px solid var(--line-2);background:none;color:var(--ink);font:500 13.5px var(--sans);text-align:left;cursor:pointer}
+
+/* ---------- directory ---------- */
+.lf-mobile .m-directory{display:flex;flex-direction:column;gap:10px;padding:12px 16px 20px}
+.lf-mobile .m-filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.lf-mobile .m-vol-switch{margin:12px 16px 0}
+.lf-mobile .m-planned-volume{display:flex;flex-direction:column;gap:10px;padding:18px 16px;border:1px dashed var(--line);border-radius:8px}
+.lf-mobile .m-planned-head{display:flex;align-items:baseline;gap:8px}
+.lf-mobile .m-planned-head b{font:700 18px var(--serif);color:var(--ink)}
+.lf-mobile .m-planned-head .c-latin{font-style:italic;color:var(--gold-deep)}
+/* Pre-generating a planned volume is offered but not recommended (the product suggests generating as you write):
+   a full-width secondary button, its confirmation below. */
+.lf-mobile .m-planned-volume .pgv{padding:0}
+.lf-mobile .m-planned-volume .pgv-btn{justify-content:center;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:600 15px var(--sans)}
+.lf-mobile .m-planned-volume .pgv-btn>svg{color:var(--gold-deep)}
+.lf-mobile .m-planned-volume .pgv-btn:disabled{opacity:.5}
+.lf-mobile .m-planned-volume .pgv-bt{flex:none}
+.lf-mobile .m-planned-volume .pgv-lock{display:none}
+.lf-mobile .m-planned-volume .pgv-warn{padding:12px 14px}
+.lf-mobile .m-planned-volume .pgv-wt{font-size:14px}
+.lf-mobile .m-planned-volume .pgv-wd{font-size:13px;line-height:1.6}
+.lf-mobile .m-planned-volume .pgv-wa{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lf-mobile .m-planned-volume .pgv-wa>.c-btn{min-height:44px;justify-content:center}
+.lf-mobile .m-planned-volume :is(.pgv-done,.pgv-busy){padding:10px 0;font-size:14px}
+.lf-mobile .m-empty-note{padding:28px 16px;border:1px dashed var(--line);border-radius:8px;color:var(--ink-3);font-size:14px;text-align:center}
+.lf-mobile .m-filters button{flex:none;min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:17px;background:var(--card);color:var(--ink-2);font:500 13px var(--sans);cursor:pointer}
+.lf-mobile .m-filters button.on{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.lf-mobile .m-dir-group{display:flex;flex-direction:column;gap:6px}
+.lf-mobile .m-dir-head{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 4px;border:0;background:none;color:var(--ink-2);font:600 13px var(--sans);text-align:left;cursor:pointer}
+.lf-mobile .m-dir-head>span:first-child{flex:1;min-width:0}
+
+/* ---------- chapter outline ---------- */
+/* While editing inline (information voids), the text box takes the full width and its actions wrap below it. */
+.lf-mobile .edt.editing{display:block!important}
+.lf-mobile .edt.editing .edt-ta{width:100%;box-sizing:border-box}
+.lf-mobile .edt.editing .edt-acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:8px}
+.lf-mobile .m-outline{display:flex;flex-direction:column;gap:12px;padding:12px 0 8px}
+.lf-mobile .m-outline-status{padding:0 4px}
+/* Long fields show a few lines; the whole block opens the field sheet. */
+.lf-mobile .m-ol-clamp2,.lf-mobile .m-ol-clamp3{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;min-width:0}
+.lf-mobile .m-ol-clamp2{-webkit-line-clamp:2}
+.lf-mobile .m-ol-clamp3{-webkit-line-clamp:3}
+.lf-mobile .m-outline button:not(.m-link){font:inherit;color:inherit;text-align:left;cursor:pointer}
+.lf-mobile .m-outline .m-link{font:400 13.5px var(--sans);color:var(--gold-deep);cursor:pointer}
+.lf-mobile .m-ol-label{font:600 12px var(--sans);letter-spacing:.08em;color:var(--ink-2);white-space:nowrap}
+.lf-mobile .m-ol-dirty{flex:none;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.lf-mobile .m-ol-pen{flex:none;display:grid;place-items:center;width:32px;height:32px;margin-left:auto;padding:0;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--gold-deep)!important}
+/* Positioning card. */
+.lf-mobile .m-ol-pos{display:flex;flex-direction:column;gap:6px;padding:12px 14px 0;border:1px solid var(--gold-soft);border-radius:8px;background:var(--gold-wash)}
+.lf-mobile .m-ol-pos-head{display:flex;align-items:center;gap:8px;min-width:0}
+.lf-mobile .m-ol-vol{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;font-size:12.5px;color:var(--gold-deep)}
+.lf-mobile .m-ol-final{flex:none;padding:1px 7px;border-radius:8px;background:var(--sage-wash);color:var(--sage);font-size:11px;font-weight:600;white-space:nowrap}
+.lf-mobile .m-ol-pos-text{position:relative;display:block;margin:0 0 8px;padding:0;border:0;background:none;font:500 15.5px/1.8 var(--serif)!important}
+.lf-mobile .m-ol-more{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:1px;height:28px;padding-left:28px;background:linear-gradient(90deg,transparent,var(--gold-wash) 24px);font:400 13px var(--sans);color:var(--gold-deep)}
+.lf-mobile .m-ol-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0 -14px;border-top:1px solid var(--gold-soft)}
+.lf-mobile .m-ol-tension,.lf-mobile .m-ol-target{display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:0;min-height:44px;padding:8px 10px 10px 14px}
+.lf-mobile .m-ol-stat-row{display:flex;align-items:center;gap:8px;min-width:0;min-height:24px}
+.lf-mobile .m-ol-target{border:0;border-left:1px solid var(--gold-soft);background:none;padding-left:12px}
+.lf-mobile .m-ol-stats .m-muted{white-space:nowrap}
+.lf-mobile .m-ol-tension b{font-size:18px;font-weight:500}
+.lf-mobile .m-ol-target b{font-size:16px;font-weight:500;white-space:nowrap}
+.lf-mobile .m-ol-meter{flex:1;min-width:20px;height:4px;border-radius:2px;background:var(--paper-3)}
+.lf-mobile .m-ol-meter>i{display:block;height:4px;border-radius:2px;background:var(--terra)}
+.lf-mobile .m-ol-band{font-size:11px;font-weight:600;color:var(--terra);white-space:nowrap}
+/* World state card: the whole card opens world and ledger; the time-advance chip edits that field. */
+.lf-mobile .m-ol-world{position:relative}
+.lf-mobile .m-ol-world-main{display:flex;flex-direction:column;gap:10px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.lf-mobile .m-ol-world-head{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box}
+.lf-mobile .m-ol-world:has(.m-ol-world-adv) .m-ol-world-head{padding-right:68px}
+.lf-mobile .m-ol-globe{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--paper)}
+.lf-mobile .m-ol-world-title{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.lf-mobile .m-ol-world-title b{font-size:14px;font-weight:600}
+.lf-mobile .m-ol-world-time{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 13px var(--serif);color:var(--ink-2)}
+.lf-mobile .m-ol-world-adv{position:absolute;top:15px;right:14px;min-height:28px;padding:0 8px;border:1px solid var(--gold-soft);border-radius:8px;background:var(--gold-wash);font-size:12px;color:var(--gold-deep)}
+.lf-mobile .m-ol-world-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-top:9px;border-top:1px solid var(--line-2)}
+.lf-mobile .m-ol-world-counts>span{display:flex;align-items:baseline;gap:5px}
+.lf-mobile .m-ol-world-counts>span+span{padding-left:10px;border-left:1px solid var(--line-2)}
+.lf-mobile .m-ol-world-counts b{font-size:16px;font-weight:500}
+.lf-mobile .m-ol-world-changes{display:flex;flex-direction:column;gap:5px;font-size:13px;line-height:1.6}
+.lf-mobile .m-ol-change{display:flex;gap:6px;min-width:0}
+.lf-mobile .m-ol-change-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lf-mobile .m-ol-change-text b{font-weight:600}
+.lf-mobile .m-ol-tag{flex:none;padding:0 6px;border-radius:4px;background:var(--paper-3);color:var(--ink-2);font-size:11.5px;font-weight:600}
+.lf-mobile .m-ol-tag.is-near{background:var(--terra-wash);color:var(--terra)}
+/* Sections. */
+.lf-mobile .m-ol-sec{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.lf-mobile .m-ol-sec-head{display:flex;align-items:center;gap:8px;min-height:32px}
+.lf-mobile .m-ol-sec-head h3{margin:0;font:600 17px var(--sans);color:var(--ink)}
+.lf-mobile .m-ol-count{font-size:13px;color:var(--ink-2)}
+.lf-mobile .m-ol-points{display:flex;flex-direction:column;gap:4px;margin:0;padding:0;list-style:none}
+.lf-mobile .m-ol-points button{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:44px;padding:6px 0;border:0;background:none;font-size:14.5px;line-height:1.7}
+.lf-mobile .m-ol-points .arr{margin:0 4px;color:var(--ink-3)}
+.lf-mobile .m-ol-points b{font-weight:600}
+.lf-mobile .m-ol-node{flex:none;display:grid;place-items:center;width:24px;height:24px;margin-top:1px;border:1.5px solid var(--gold);border-radius:50%;font-size:13px;font-style:italic;color:var(--gold-deep)}
+.lf-mobile .m-ol-expand{align-self:flex-start;min-height:36px;margin-left:34px;padding:6px 0}
+.lf-mobile .m-ol-anchors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lf-mobile .m-ol-anchors>button,.lf-mobile .m-ol-bounds>button,.lf-mobile .m-ol-dilemma{display:flex;flex-direction:column;gap:6px;min-width:0;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:14px;line-height:1.7}
+.lf-mobile .m-ol-anchor-head,.lf-mobile .m-ol-bound-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.lf-mobile .m-ol-anchor-head svg{color:var(--gold-deep)}
+.lf-mobile .m-ol-bounds{display:flex;flex-direction:column;gap:8px}
+.lf-mobile .m-ol-bounds>.is-know{border-color:transparent;background:var(--sage-wash)}
+.lf-mobile .m-ol-bounds>.is-dontknow{border-color:transparent;background:var(--slate-wash)}
+.lf-mobile .m-ol-bounds>.is-know .m-ol-bound-head{color:var(--sage)}
+.lf-mobile .m-ol-bounds>.is-dontknow .m-ol-bound-head{color:var(--slate)}
+.lf-mobile .m-ol-dilemma{font:500 15px/1.8 var(--serif)!important}
+.lf-mobile .m-ol-ledger{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.lf-mobile .m-ol-ledger-all{display:flex;align-items:center;gap:1px;min-height:36px;margin-left:auto;font-size:13px}
+.lf-mobile .m-ol-ledger-group{display:flex;flex-direction:column;gap:2px;padding-top:8px;border-top:1px solid var(--line-2)}
+.lf-mobile .m-ol-ledger-item{display:flex;flex-direction:column;gap:3px;min-height:44px;padding:6px 0;border:0;background:none;font-size:14px;line-height:1.65}
+.lf-mobile .m-ol-ledger-meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2)}
+.lf-mobile .m-ol-ledger-ids{display:flex;align-items:center;gap:8px;min-height:40px;padding:0;border:0;background:none;font-size:13px}
+/* Field sheet: full text, AI rewrite and save in one layer (portaled outside the frame). */
+.m-field-sheet-body{display:flex;flex-direction:column;gap:8px}
+.m-field-text{box-sizing:border-box;width:100%;max-height:60vh;overflow-y:auto;padding:14px 16px;border:1px solid var(--paper-3);border-radius:10px;background:var(--card);color:var(--ink);font:500 16.5px/1.95 var(--serif);resize:none}
+.m-field-text.is-single{min-height:0;font:500 16px/1.6 var(--sans)}
+.m-field-text:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.m-field-note{font-size:12px;color:var(--ink-3)}
+.m-field-ai{display:flex;flex-direction:column;gap:10px;margin-top:6px;padding:12px;border:1px solid var(--gold-soft);border-radius:10px;background:var(--gold-wash)}
+.m-field-ai-label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--gold-deep)}
+.m-field-ai-row{display:flex;gap:8px}
+.m-field-ai-row input{flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:15px var(--sans)}
+.m-field-ai-go{display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;border:0;border-radius:8px;background:var(--ink);color:var(--paper);font:600 14px var(--sans);cursor:pointer}
+.m-field-ai-go:disabled{opacity:.45;cursor:default}
+.m-field-chips{display:flex;flex-wrap:wrap;gap:6px}
+/* "询问助手" leads the rewrite shortcuts in black and gold, with a slow light sweep. */
+.m-field-ask{display:contents}
+.m-field-ask>.c-content-action{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 13px;border:1px solid oklch(0.70 0.125 70 / .65);border-radius:16px;background:#221D16;color:oklch(0.84 0.115 74);font:600 13px var(--sans);opacity:1;cursor:pointer}
+.m-field-ask>.c-content-action svg{width:13px;height:13px}
+.m-field-ask>.c-content-action::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,oklch(0.88 0.11 82 / .38) 50%,transparent 65%);transform:translateX(-120%);animation:m-ask-sweep 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes m-ask-sweep{0%,45%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+@media (prefers-reduced-motion:reduce){.m-field-ask>.c-content-action::after{animation:none;opacity:0}}
+.m-field-chips>button{min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink-2);font:13px var(--sans);cursor:pointer}
+.m-field-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.m-field-actions>.c-btn{min-height:46px;justify-content:center}
+.m-field-step{display:flex;align-items:center;gap:0;font-size:12.5px;color:var(--ink-2)}
+.m-field-step>span{margin-right:4px}
+.m-field-step>button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:none;color:var(--ink-2);cursor:pointer}
+.m-field-step>button:disabled{opacity:.35;cursor:default}
+.m-field-up,.m-field-down{display:grid;place-items:center}
+.m-field-up{transform:rotate(-90deg)}
+.m-field-down{transform:rotate(90deg)}
+.m-ledger-row{align-items:start;width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.m-choice-list{display:flex;flex-direction:column}
+.m-choice-list button{display:flex;align-items:flex-start;gap:12px;min-height:56px;padding:10px 4px;border:0;border-bottom:1px solid var(--line-2);background:none;color:var(--ink);font:400 14px var(--sans);text-align:left;cursor:pointer}
+.m-choice-list button>span:last-child{display:flex;flex-direction:column;gap:2px}
+.m-choice-list .m-muted{font-size:12px;color:var(--ink-3)}
+.m-choice-mark{flex:none;color:var(--gold-deep)}
+.m-sheet-primary{width:100%;min-height:46px;margin-top:12px;justify-content:center}
+.m-ledger{display:flex;flex-direction:column;gap:10px}
+.m-ledger .m-section-label{margin:8px 0 0;font:500 12px var(--sans);color:var(--ink-3)}
+
+/* ---------- volume brief ---------- */
+/* Character arcs read as one sentence, "from → to"; decision cards put the chapter and who on one line. */
+.lf-mobile .wbb p{margin:0}
+.lf-mobile .wbb-carc{gap:7px;padding:12px 14px}
+.lf-mobile .wbb-caflow{display:block;line-height:1.6}
+.lf-mobile .wbb-from,.lf-mobile .wbb-to{display:inline}
+.lf-mobile .wbb-arrow{display:inline-flex;transform:none;width:auto;margin:0 4px;vertical-align:-2px}
+.lf-mobile .wbb-dec{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:10px;row-gap:6px;padding:12px 14px}
+.lf-mobile .wbb-decbody{display:contents}
+.lf-mobile .wbb-decch{padding:2px 8px}
+.lf-mobile .wbb-decchoice,.lf-mobile .wbb-decimpact{grid-column:1 / -1}
+
+/* Volume page: the level switch is one segmented control; nodes and chapters keep a narrow leading column. */
+.lf-mobile .lvl-band{padding:8px 16px 0;border-bottom:0;background:none;overflow:visible}
+.lf-mobile .lvl-switch{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:3px;border-radius:8px;background:var(--paper-3)}
+.lf-mobile .lvl-switch .lvl-arrow,.lf-mobile .lvl-switch .lvl-ic{display:none}
+.lf-mobile .lvl{justify-content:center;min-height:36px;padding:0;border:0;border-radius:6px;background:none;box-shadow:none}
+.lf-mobile .lvl.on{background:var(--card);box-shadow:0 1px 3px var(--shadow)}
+.lf-mobile .lvl-tx b{font-size:14px}
+.lf-mobile .lvl.on .lvl-tx b{color:var(--ink)}
+.lf-mobile .wbv-poshead .wb-outline-actions{width:100%;margin-left:0;justify-content:space-between}
+.lf-mobile .wbv-node{gap:10px;padding:12px 14px}
+.lf-mobile .wbv-nodeid{width:22px;height:22px;font-size:12px}
+.lf-mobile .wbv-fntag{border-radius:6px}
+.lf-mobile .wbb-chap{grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px}
+
+/* ---------- world ---------- */
+/* The hero stacks name, volume and premise above a five-column count row and a full-width edit action. */
+.lf-mobile .wd-hero{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:16px}
+.lf-mobile .wd-hero-top{display:contents}
+.lf-mobile .wd-hero-bk{order:1;font-size:24px}
+.lf-mobile .wd-hero-meta{order:2;margin:0}
+.lf-mobile .wd-hero-prem{order:3;margin:2px 0 0}
+.lf-mobile .wd-hero-counts{order:4;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:8px 0 0;padding:10px 0 0;border-top:1px solid var(--line-2)}
+.lf-mobile .wd-cnt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0;border:0;border-radius:0;background:none;font-size:11.5px;color:var(--ink-3);text-align:center;white-space:nowrap}
+.lf-mobile .wd-cnt+.wd-cnt{border-left:1px solid var(--line-2)}
+.lf-mobile .wd-cnt b{font-size:18px;color:var(--ink)}
+.lf-mobile .wd-hero-edit{order:5;position:static;align-self:stretch;justify-content:center;min-height:44px;margin:8px 0 0}
+/* The overview previews the blueprint; "进入" opens it in full. */
+.lf-mobile .wd-dna-lead{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+/* A chapter without a snapshot: message first, then a full-width action. */
+.lf-mobile .wd-snapnote{flex-wrap:wrap;align-items:flex-start;gap:10px}
+.lf-mobile .wd-snapnote>svg{flex:none;margin-top:2px}
+.lf-mobile .wd-snapnote>div{flex:1 1 0;min-width:0}
+.lf-mobile .wd-snapnote>.c-btn{flex:1 0 100%;justify-content:center;min-height:40px}
+/* Time, advance and counts are already in the world-state panel right below. */
+.lf-mobile .wd-snapstat{display:none}
+/* The breadcrumb names the relationship reader; the graph/list switch is not offered on phones. */
+.lf-mobile .wd-reader .c-relationship-map>.c-content-toolbar{display:none}
+
+/* ---------- me ---------- */
+/* Read-only profile fields sit on one line: label left, value right. */
+.lf-mobile .set-field:not(:has(input,textarea,select,button)){flex-direction:row;align-items:baseline;justify-content:space-between;gap:12px;padding-top:12px;padding-bottom:12px}
+.lf-mobile .set-field:not(:has(input,textarea,select,button))>:last-child{min-width:0;text-align:right;overflow-wrap:anywhere}
+.lf-mobile .m-credits{display:flex;flex-direction:column;gap:4px}
+.lf-mobile .m-credits-total{margin-top:6px;font-size:26px;font-weight:600;color:var(--ink)}
+
+/* ---------- me (list) ---------- */
+.lf-mobile .m-mine{display:flex;flex-direction:column;gap:12px;padding:4px 16px 20px}
+.lf-mobile .m-profile{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);text-align:left;cursor:pointer}
+.lf-mobile .m-profile-seal{display:grid;place-items:center;flex:none;width:48px;height:48px;border-radius:50%;background:var(--gold-deep);color:#fff;font-size:20px}
+.lf-mobile .m-profile-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.lf-mobile .m-profile-name{font-size:16px;font-weight:600}
+.lf-mobile .m-profile-handle{font-size:12px;color:var(--ink-3)}
+.lf-mobile .m-group{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.lf-mobile .m-row{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:0;border-top:1px solid var(--line-2);background:none;color:var(--ink);font:500 14.5px var(--sans);text-align:left;cursor:pointer}
+.lf-mobile .m-row:first-child{border-top:0}
+.lf-mobile .m-row>span:first-child{flex:1;min-width:0}
+.lf-mobile .m-row-static{cursor:default}
+.lf-mobile .m-row-chevron{color:var(--ink-3);font-size:18px}
+.lf-mobile .m-profile .m-row-chevron{margin-left:auto}
+
+/* ---------- shared dialogs on phones: bottom sheets with full-width actions ---------- */
+@media(max-width:620px){
+  .lf-err-scrim,.c-confirm-scrim,.rg-scrim{place-items:end stretch;padding:0}
+  /* Any dialog inside a shared backdrop fits the screen width, whatever fixed width it uses on desktop. */
+  .rg-scrim>*{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box}
+  .rg-scrim>* .rg-chips,.rg-scrim>* .cr-chips{flex-wrap:wrap}
+  .lf-err-modal,.c-confirm-dialog,.rg-modal{width:100%!important;max-width:none!important;max-height:88dvh;overflow:auto;border-radius:16px 16px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  .lf-err-acts{gap:8px}
+  .lf-err-acts .c-btn{flex:1;min-height:44px;justify-content:center}
+  .fin-scrim{padding:16px}
+  .fin-card{width:100%;max-width:100%}
+}
+[data-mobile] :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select){font-size:max(16px,1em)}
+
+/* Card collections stack in one column on phones. */
+@media(max-width:620px){[data-mobile] .dbk-card-reader-grid,[data-mobile] .dbk-card-reader-waterfall{grid-template-columns:1fr!important;columns:1!important}}
+
+/* ---------- book creation on phones (outside the frame; the app shell marks phone width with data-mobile) ---------- */
+.cr-phone-steps{display:none}
+@media(max-width:620px){
+  [data-mobile] .cr-shell{height:100dvh}
+  [data-mobile] .cr-top{height:auto;min-height:52px;gap:10px;padding:calc(6px + env(safe-area-inset-top,0px)) 6px 8px 16px}
+  [data-mobile] .cr-brand,[data-mobile] .cr-topr .lang-seg{display:none}
+  [data-mobile] .cr-topr .c-ic{width:44px!important;height:44px!important}
+  [data-mobile] .cr-phone-steps{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+  [data-mobile] .cr-phone-steps-label{font:600 14px var(--sans);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  [data-mobile] .cr-phone-steps-bar{display:flex;gap:4px}
+  [data-mobile] .cr-phone-steps-bar i{flex:1;height:4px;border-radius:2px;background:var(--paper-3)}
+  [data-mobile] .cr-phone-steps-bar i.on{background:var(--gold)}
+  [data-mobile] .cr-nav{height:auto;gap:8px;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+  [data-mobile] .cr-navmid{display:none}
+  [data-mobile] .cr-nav .c-btn{min-height:44px;justify-content:center}
+  [data-mobile] .cr-nav .c-btn:last-child{flex:1}
+  /* Premise: one column; the analyst side panel is a desktop aid. */
+  [data-mobile] .cr-pside,[data-mobile] .cr-pside-tab{display:none!important}
+  [data-mobile] .cr-manus{max-width:none;padding:20px 16px 28px}
+  [data-mobile] .cr-kick{display:none}
+  [data-mobile] .cr-bigq{font-size:22px}
+  [data-mobile] .cr-chips{flex-wrap:wrap}
+  [data-mobile] .cr-optgrid,[data-mobile] .cr-inline{grid-template-columns:1fr}
+  /* Generation steps render the phone list and full-screen detail (MobileCreatePhase). */
+  [data-mobile] .cr-shell.is-phone-detail .cr-nav{display:none}
+  /* The detail grows with its content so its title bar and item navigation stay pinned while scrolling. */
+  [data-mobile] .cr-shell.is-phone-detail .cr-scene{display:block;height:auto;min-height:100%}
+  [data-mobile] .cr-phone-reroll{display:inline-flex;align-items:center;gap:4px;min-height:34px;margin-right:2px;padding:0 12px;border:1px solid var(--gold-soft);border-radius:8px;background:var(--gold-wash);color:var(--gold-deep);font:600 13.5px var(--sans);cursor:pointer}
+  [data-mobile] .cr-topr .c-ic{border:0;background:none;box-shadow:none;color:var(--ink-2)}
+  [data-mobile] .cr-phone-reroll:disabled{color:var(--ink-3)}
+  [data-mobile] .cr-vol-reroll{display:none}
+  .m-cr-phase{display:flex;flex-direction:column;gap:12px;padding:14px 16px 24px}
+  .m-cr-status{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+  .m-cr-status.is-run{border-color:var(--gold-soft);background:var(--gold-wash,var(--card))}
+  .m-cr-status>span:last-child{display:flex;flex-direction:column;gap:2px}
+  .m-cr-status b{font:600 15px var(--sans);color:var(--ink)}
+  .m-cr-note{padding:0 4px;font-size:12.5px;line-height:1.6;color:var(--ink-3)}
+  .m-cr-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+  .m-cr-row{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 14px;border:0;border-top:1px solid var(--line-2);background:none;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+  .m-cr-row:first-child{border-top:0}
+  .m-cr-row:disabled{cursor:default}
+  .m-cr-row:disabled .m-cr-row-main b{color:var(--ink-3)}
+  .m-cr-row.is-active{background:var(--gold-wash,var(--paper-2))}
+  .m-cr-row .cr-cav{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:14px}
+  .m-cr-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .m-cr-row-main b{font:600 14.5px var(--sans)}
+  .m-cr-row-main .m-muted{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .m-cr-row .m-row-chevron{color:var(--ink-3);font-size:18px}
+  .m-cr-row .m-stage{flex:none;padding:2px 8px;border-radius:10px;background:var(--paper-3);color:var(--ink-3);font-size:11.5px}
+  .m-cr-row .m-stage--final{background:var(--sage-wash,var(--paper-3));color:var(--sage,var(--ink-2))}
+  .m-cr-row .m-stage--prose{background:var(--gold-wash,var(--paper-3));color:var(--gold-deep)}
+  .m-cr-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .m-cr-phase .ck-passes{display:flex;flex-direction:column;gap:6px;padding:0 4px}
+  .m-cr-detail{display:flex;flex-direction:column;min-height:100%}
+  .m-cr-detail-bar{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:4px;min-height:52px;padding:0 12px 0 4px;border-bottom:1px solid var(--line);background:var(--paper)}
+  .m-cr-detail-bar .m-icon-button{display:grid;place-items:center;min-width:44px;height:44px;border:0;background:none;color:var(--ink);font-size:24px;cursor:pointer}
+  .m-cr-detail-title{min-width:0;display:flex;flex-direction:column}
+  .m-cr-back{display:grid;place-items:center;transform:rotate(180deg)}
+  .m-cr-detail-title b{font-size:17px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .m-cr-detail-title .m-muted{font-size:12px;color:var(--ink-3)}
+  .m-cr-detail-body{flex:1}
+  .m-cr-detail .cr-dp-title,.m-cr-detail .cr-dp-av,.m-cr-detail .cr-dp-meta .c-badge{display:none}
+  .m-cr-detail-nav{position:sticky;bottom:0;display:flex;gap:8px;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--paper)}
+  .m-cr-detail-nav .c-btn{flex:1;min-height:44px;justify-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  [data-mobile] .cr-dp{padding:18px 16px 28px}
+  [data-mobile] .cr-ready{padding:28px 16px}
+}
+
+/* ---------- editable content on phones (FD-176) ----------
+   Actions that appear on hover on desktop are always visible on phones. Edit is a pen icon at the top
+   right of its block; untitled blocks keep room for it so it never covers text. A detail page's own
+   actions (revision history, editing its header) sit in the detail bar, so the body starts with content. */
+@media(max-width:620px){
+  [data-mobile] .c-content-toolbar-owner:not(.editing)>.c-content-toolbar .c-content-toolbar-actions{opacity:1;pointer-events:auto}
+  /* A block title stays on one line; its actions wrap below it when they do not fit beside it. */
+  [data-mobile] .c-content-toolbar{row-gap:6px}
+  [data-mobile] .c-content-toolbar-title{flex:1 0 auto;max-width:100%}
+  [data-mobile] .cr-wbe-ehead{flex-wrap:wrap;row-gap:6px}
+  [data-mobile] .cr-wbe-ehead .dbk-k{white-space:nowrap}
+  [data-mobile] .c-content-action.edit{width:36px;min-width:36px;height:36px;min-height:36px;padding:0;gap:0;font-size:0}
+  [data-mobile] .c-content-action.edit svg{width:16px;height:16px}
+  /* Pages that size every touch action at 44px keep the pen the same size as its neighbours. */
+  [data-mobile] .cs-page .c-content-action.edit{width:44px;min-width:44px;height:44px;min-height:44px}
+  [data-mobile] .cr-wbe-edit{position:absolute;top:6px;right:6px;margin:0;opacity:1;pointer-events:auto}
+  [data-mobile] .c-editable-surface:not(.editing):has(>.cr-wbe-edit),
+  [data-mobile] .c-editable-surface:not(.editing)>:has(>.cr-wbe-edit){padding-right:48px}
+  /* A section that already has its own heading row puts the pen at the end of that row and gives the
+     content the full width. */
+  [data-mobile] .cr-vol-sec{position:relative}
+  [data-mobile] .cr-vol-sechead{min-height:36px;padding-right:44px}
+  [data-mobile] .cr-vol-sec>.c-editable-surface.c-editable-surface:not(.editing){position:static;padding-right:0}
+  [data-mobile] .cr-vol-sec>.c-editable-surface:not(.editing)>.cr-wbe-edit{top:0;right:0}
+  [data-mobile] .cr-vbk{position:relative}
+  [data-mobile] .cr-vbk-h{min-height:36px;padding-right:44px}
+  [data-mobile] .cr-vbk>.c-editable-surface.c-editable-surface:not(.editing){position:static;padding-right:0}
+  [data-mobile] .cr-vbk>.c-editable-surface:not(.editing)>.cr-wbe-edit{top:0;right:0}
+  /* Volume-outline step: one column at the page margin, no nested panel frame, narrow number columns, and the
+     volume tabs share a row with "生成下一卷". */
+  [data-mobile] .cr-vol-doc{padding:16px 16px 32px}
+  [data-mobile] .cr-volume-nav{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+  [data-mobile] .cr-volume-tabs{min-width:0;overflow-x:auto;scrollbar-width:none}
+  [data-mobile] .cr-volume-add{flex:none;align-self:center}
+  [data-mobile] .cr-vol-seqnote{display:none}
+  [data-mobile] .cr-vol-lead{font-size:16.5px;line-height:1.85}
+  [data-mobile] .cr-vol-right{padding:0;border:0;border-radius:0;background:none}
+  [data-mobile] .cr-vol-act,[data-mobile] .cr-vol-node{gap:10px;padding:12px 14px}
+  [data-mobile] .cr-vol-conf{flex-direction:column;gap:6px;padding:12px 14px}
+  [data-mobile] .cr-vol-confk{width:auto;flex:none}
+  [data-mobile] .cr-vbch{gap:8px}
+  [data-mobile] .cr-vbdec{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:10px;row-gap:4px}
+  [data-mobile] .cr-vbdec-body{display:contents}
+  [data-mobile] .cr-vbdec-choice,[data-mobile] .cr-vbdec-impact{grid-column:1 / -1}
+  /* While editing, field names sit above their values so the text keeps the full width. */
+  [data-mobile] :is(.c-structured-list.kv.editing,.editing .c-structured-list.kv) .c-structured-list-row{flex-direction:column;align-items:stretch;gap:4px}
+  [data-mobile] :is(.c-structured-list.kv.editing,.editing .c-structured-list.kv) .c-structured-list-key{max-width:100%;min-width:0}
+  [data-mobile] :is(.c-structured-list.kv.editing,.editing .c-structured-list.kv) .c-structured-list-value{width:100%}
+  /* The in-place editing tip only reports saving on phones. */
+  [data-mobile] .cr-wbe-tip{font-size:0}
+  [data-mobile] .cr-wbe-tip>svg{display:none}
+  [data-mobile] .cr-wbe-tip>span{font-size:11.5px}
+  [data-mobile] .cr-wbe-tip:has(.cr-wbe-state:empty){display:none}
+  .m-cr-detail-title{flex:1}
+  .m-cr-detail-tools{display:flex;flex:none;align-items:center;gap:2px}
+  [data-mobile] .m-cr-detail-tools .c-content-action{position:static;width:40px;min-width:40px;height:40px;min-height:40px;padding:0;gap:0;border:0;background:none;color:var(--ink-2);font-size:0;opacity:1;pointer-events:auto}
+  [data-mobile] .m-cr-detail-tools .c-content-action.edit{color:var(--gold-deep)}
+  [data-mobile] .m-cr-detail-tools .c-content-action svg{width:18px;height:18px}
+  .m-cr-detail .cr-dp-head:not(.editing){display:none}
+}
+
+/* ---------- phone page audit (FD-176, 2026-11-16) ---------- */
+@media(max-width:620px){
+  /* World timeline: one scrolling row of chapters after the genesis cap; volume bands and the floating
+     chapter flag are desktop decoration that overlapped the dots, and the page heading names the chapter. */
+  [data-mobile] .wd-spine{height:auto;padding:10px 16px}
+  [data-mobile] .wd-cap{width:56px}
+  [data-mobile] .wd-track{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;cursor:default!important}
+  [data-mobile] .wd-track::-webkit-scrollbar{display:none}
+  [data-mobile] .wd-band.done,[data-mobile] .wd-band.plan,[data-mobile] .wd-band-l,[data-mobile] .wd-head{display:none}
+  [data-mobile] .wd-band.active{flex:1 0 auto!important;border-right:0}
+  [data-mobile] .wd-ticks{position:static;justify-content:flex-start;align-items:center;gap:2px;padding:4px 8px}
+  [data-mobile] .wd-tick{flex:none;width:34px;max-width:none;min-height:40px;justify-content:center}
+  [data-mobile] .wd-tick.sel::before{width:32px;height:100%;bottom:0}
+  /* Close buttons of side drawers are full-size touch targets. */
+  [data-mobile] .cr-drawer-head .edt-x{min-width:44px;min-height:44px}
+  [data-mobile] .asst-usage-help-button{min-width:32px;min-height:32px}
+  /* Volume outline page: labels sit above their text and paragraphs use the card spacing. */
+  .lf-mobile .wbv p{margin:0}
+  .lf-mobile .wbv-act{gap:6px}
+  .lf-mobile .wbv-nodebody{gap:8px}
+  .lf-mobile .wbv-conf,.lf-mobile .wbv-endrow{grid-template-columns:1fr;gap:6px;padding:12px 14px}
+  .lf-mobile .wbb-chap .wbb-rhythm{grid-column:1 / 3;justify-self:start}
+  /* Cruise: a section title keeps one line; its pipeline note wraps below it. */
+  .lf-mobile .cr-secrow{flex-wrap:wrap;row-gap:4px}
+  .lf-mobile .cr-seclab{white-space:nowrap}
+  /* Inbox: the five filters share the row, and message links have a full-height tap area. */
+  .lf-mobile .inbox-filters>button{flex:1 1 auto;justify-content:center;padding-inline:7px}
+  .lf-mobile .inbox-card button{padding-block:7px;margin-block:-7px}
+  /* Me pages. */
+  .lf-mobile .set-metarow{column-gap:14px}
+  .lf-mobile .set-metarow .mdot{display:none}
+  .lf-mobile .set-creditcard{flex-direction:column;align-items:stretch;gap:16px}
+  .lf-mobile .set-creditcard>svg{align-self:center}
+  .lf-mobile .set-creditmid{width:100%;max-width:none;flex:none}
+  .lf-mobile .set-invite-copy-actions{flex-direction:row;align-self:stretch;gap:8px}
+  .lf-mobile .set-invite-copy-actions>button{flex:1;min-height:44px;justify-content:center}
+  .lf-mobile .set-invite-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .lf-mobile .set-key-create-head{display:contents}
+  .lf-mobile .set-key-create-head>.c-btn{order:3;align-self:stretch;min-height:44px;justify-content:center}
+  [data-mobile] .c-data-table-grid tr.is-empty>td{display:block;text-align:center}
+}

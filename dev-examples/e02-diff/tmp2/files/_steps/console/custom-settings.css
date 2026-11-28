@@ -1,0 +1,208 @@
+.cs-page{min-width:0;color:var(--ink)}
+.cs-body{overflow:auto;min-width:0;container-name:cs-page;container-type:inline-size}
+.cs-controls{display:flex;align-items:center;gap:8px;flex:none}
+.cs-layout{display:grid;grid-template-columns:184px minmax(0,1fr);gap:36px;align-items:start;min-width:0}
+.cs-main{width:100%;max-width:1040px;min-width:0}
+
+/* 类别栏 */
+.cs-nav{position:sticky;top:0;display:flex;flex-direction:column;gap:12px;min-width:0;max-height:calc(100svh - 152px);overflow-y:auto;scrollbar-width:thin;padding:8px 16px 16px 0;border-right:1px solid var(--line)}
+.cs-nav-heading,.cs-outline-heading{padding:0 10px;color:var(--ink-3);font-size:11px;font-weight:600;letter-spacing:.04em}
+.cs-nav-list{display:flex;flex-direction:column;gap:4px}
+.cs-nav-search{width:100%;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:12px}
+.cs-nav-search:focus-visible{outline:2px solid var(--gold-deep);outline-offset:2px}
+.cs-nav-empty{padding:0 10px;color:var(--ink-3);font-size:12px}
+.cs-nav-item{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-height:38px;padding:7px 10px;border:0;border-radius:5px;
+  background:transparent;color:var(--ink-2);font:inherit;font-size:13px;text-align:left;cursor:pointer;transition:background .15s,color .15s}
+.cs-nav-item:hover:not(:disabled):not(.on){background:var(--card);color:var(--ink)}
+.cs-nav-item.on{background:var(--gold-wash);color:var(--gold-deep);font-weight:600}
+.cs-nav-name{min-width:0;overflow-wrap:anywhere}
+.cs-nav-item small{flex:none;color:var(--ink-3);font-size:10.5px;font-weight:400}
+.cs-nav-add{color:var(--gold-deep);justify-content:center;margin-top:6px;background:var(--paper-2);font-size:13px}
+.cs-nav-more{color:var(--ink-3);justify-content:flex-start}
+.cs-nav-item:disabled,.cs-nav-add:disabled{opacity:.5;cursor:not-allowed}
+.cs-outline{padding-top:18px;border-top:1px solid var(--line);margin-top:4px}
+.cs-outline-list{display:grid;gap:2px;margin-top:8px}
+.cs-outline-list button{display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:0;border-radius:5px;background:transparent;color:var(--ink-2);font:inherit;font-size:12px;text-align:start;cursor:pointer}
+.cs-outline-list button:hover,.cs-outline-list button:focus-visible{background:var(--paper-2);color:var(--gold-deep)}
+.cs-outline-list button span{min-width:0;overflow-wrap:anywhere}
+.cs-outline-list small{margin-left:auto;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.cs-outline-toggle{display:none}
+
+/* 类别标题 */
+.cs-head{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px;margin-bottom:16px;padding:4px 0 16px;min-width:0;background:var(--paper);border-bottom:1px solid var(--line)}
+.cs-head-title{display:flex;flex:1 1 240px;flex-wrap:wrap;align-items:center;gap:10px 16px;min-width:0}
+.cs-head h1{flex-basis:100%;margin:0;min-width:0;overflow-wrap:anywhere;font-size:26px;font-weight:600;line-height:1.45}
+.cs-head-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-left:auto;padding-top:4px}
+.cs-head.editing{border-bottom-color:var(--gold-soft)}
+.cs-head>.cs-note{flex-basis:100%;margin:0}
+.cs-generation{display:inline-flex;align-items:center;gap:8px;padding:0;color:var(--ink-3);font-size:12px;cursor:pointer}
+.cs-generation.on{color:var(--gold-deep);font-weight:500}
+.cs-generation .set-mail-switch>span{width:34px;height:20px}
+.cs-generation .set-mail-switch>span::after{top:2px;left:2px;width:14px;height:14px}
+.cs-generation .set-mail-switch input:checked+span::after{transform:translateX(14px)}
+.cs-generation .set-mail-switch input:focus-visible+span{outline:2px solid var(--gold-deep);outline-offset:2px}
+.cs-generation:has(input:disabled){opacity:.6;cursor:not-allowed}
+.cs-flag{display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;background:var(--paper-3);color:var(--ink-2);font-size:11px;font-weight:600;white-space:nowrap}
+.cs-flag-current{background:color-mix(in srgb,var(--gold-deep) 14%,var(--card));color:var(--gold-deep)}
+
+/* 操作菜单 */
+.cs-menu{position:relative;display:inline-flex}
+.cs-menu-trigger{min-width:30px;justify-content:center;font-weight:700;letter-spacing:1px}
+.cs-menu-list{position:absolute;top:calc(100% + 6px);right:0;z-index:30;display:grid;min-width:210px;padding:5px;border:1px solid var(--line);
+  border-radius:8px;background:var(--card);box-shadow:0 14px 34px -14px var(--shadow)}
+.cs-menu-list button{display:grid;gap:2px;padding:8px 10px;border:0;border-radius:5px;background:transparent;color:var(--ink);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.cs-menu-list button:hover:not(:disabled),.cs-menu-list button:focus-visible{background:var(--paper-2)}
+.cs-menu-list button.is-danger{color:var(--terra)}
+.cs-menu-list button:disabled{opacity:.5;cursor:not-allowed}
+.cs-menu-list small{color:var(--ink-3);font-size:11px;font-weight:400}
+
+/* 类别规则 */
+.cs-rules{margin:0 0 28px;min-width:0}
+.cs-rules-toggle{display:flex;width:100%;align-items:center;gap:12px;padding:4px 0;border:0;background:transparent;color:var(--ink-2);font:inherit;text-align:left;cursor:pointer}
+.cs-rules-toggle:hover{color:var(--gold-deep)}
+.cs-rules-toggle b{flex:none;font-size:13px;font-weight:600}
+.cs-rules-toggle span{flex:none;color:var(--ink-3);font-size:12px}
+.cs-rules-toggle em{flex:1;min-width:0;overflow:hidden;color:var(--ink-3);font-size:12px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
+.cs-rules-toggle i{flex:none;margin-left:auto;color:var(--gold-deep);font-size:12px;font-style:normal}
+.cs-rules-body{margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:6px;background:var(--paper-2);min-width:0;overflow-x:auto}
+.cs-rules-spec{margin:0 0 12px;font-size:13px;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+.cs-rules-table{width:100%;border-collapse:collapse;background:var(--card);font-size:12.5px;table-layout:auto}
+.cs-rules-table th,.cs-rules-table td{padding:8px 10px;border:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.cs-rules-table th{background:var(--paper-3);color:var(--ink-2);font-weight:600;white-space:nowrap}
+.cs-rules-table td:nth-child(2),.cs-rules-table td:nth-child(3){white-space:nowrap;color:var(--ink-2)}
+
+/* 类别文档：根字段直接使用标准内容组件，对象列表才使用卡片集合。 */
+.cs-document{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 24px;min-width:0;margin:0;padding:0 0 36px;border:0}
+.cs-document-section{grid-column:1 / -1;min-width:0;scroll-margin-top:24px}
+.cs-document-section.is-compact{grid-column:auto}
+.cs-document-section:focus-visible{outline:2px solid var(--gold-soft);outline-offset:6px;border-radius:6px}
+.cs-document-list{min-width:0}
+.cs-document .c-content-toolbar:has(.cs-flash) .c-content-toolbar-actions{opacity:1;pointer-events:auto}
+.cs-document-empty{padding:24px 16px;color:var(--ink-3);font-size:13px;background:var(--paper-2);border:1px dashed var(--line);border-radius:6px}
+.cs-document-item h3{min-width:0;overflow-wrap:anywhere}
+.cs-document .c-titled-text-body{white-space:normal}
+.cs-document .asst-custom__text{min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.cs-document .asst-custom__values{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:16px 24px;min-width:0;white-space:normal}
+.cs-document .asst-custom__values>.asst-custom__field{min-width:0;margin:0}
+.cs-document .asst-custom__field.is-wide{grid-column:1 / -1}
+.cs-document .asst-custom__values dt{margin:0 0 4px;color:var(--ink-3);font-size:12px;font-weight:500;line-height:1.5}
+.cs-document .asst-custom__values dd{margin:0;color:var(--ink);font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+.cs-document .asst-custom__field.is-group>dt{margin-bottom:10px;color:var(--ink-2);font-weight:600}
+.cs-document .asst-custom__field.is-group{padding-top:14px;border-top:1px solid var(--line)}
+.cs-document .asst-custom__values dd>.asst-custom__values{padding-inline-start:12px;border-inline-start:1px solid var(--line)}
+.cs-document .asst-custom__values ol{margin:0;padding-inline-start:20px}
+.cs-document .asst-custom__values li+li{margin-top:4px}
+.cs-document-item>.dbk-card-reader-fields{padding-top:13px}
+.cs-document .cs-document-list.expanded .dbk-card-reader-grid{padding-top:8px}
+.cs-document .c-structured-list.kv .c-structured-list-key{max-width:40%;overflow-wrap:anywhere;white-space:normal}
+.cs-flash{color:var(--gold-deep);font-size:12px;font-weight:600}
+
+/* 状态与提示 */
+.cs-note{margin:0 0 12px;color:var(--ink-2);font-size:13px;line-height:1.7}
+.cs-note-alert{color:var(--terra)}
+.cs-note-warn{color:var(--gold-deep)}
+.cs-state{display:grid;justify-items:start;gap:12px;padding:12px 0 24px}
+.cs-empty{display:grid;justify-items:start;gap:8px;padding:28px 26px;border:1px dashed var(--line-2);border-radius:8px;background:var(--card)}
+.cs-empty b{font-size:15px;font-weight:600}
+.cs-empty p{margin:0;color:var(--ink-3);font-size:13px;line-height:1.7}
+.cs-empty-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.cs-first{display:grid;justify-items:start;gap:14px;width:100%;max-width:620px;margin:64px auto 18px}
+.cs-first h1{margin:0;font-size:24px;font-weight:600}
+.cs-first p{margin:0;color:var(--ink-2);font-size:13.5px;line-height:1.85}
+.cs-first-examples{display:flex;flex-wrap:wrap;gap:8px}
+.cs-first-examples button{padding:4px 12px;border:1px dashed var(--line-2);border-radius:999px;background:var(--card);color:var(--ink-2);font:inherit;font-size:12.5px;cursor:pointer}
+.cs-first-examples button:hover:not(:disabled){border-color:var(--gold);color:var(--gold-deep)}
+.cs-first-examples button:disabled{opacity:.5;cursor:not-allowed}
+
+/* 手动编辑 */
+.cs-editor-fields{border:0;margin:0;padding:0;min-width:0}
+.cs-editor-fields:disabled{opacity:.75}
+.cs-document-list>.cs-entry-editor{padding:0 8px 8px}
+.cs-entry-editor{flex-basis:100%;min-width:0}
+.cs-entry-editor:empty{display:none}
+.cs-entry-editor>.cs-note{margin:10px 0 0}
+.cs-draft-recovery{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center}
+.cs-draft-recovery label{flex-basis:100%;font-size:12px;color:var(--ink-2)}
+.cs-draft-recovery textarea{display:block;width:100%;max-height:140px;min-height:72px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit}
+.cs-field{min-width:0;position:relative}
+.cs-field .c-structured-list-input{width:100%;box-sizing:border-box;min-width:0}
+.cs-field-clearable>.c-structured-list-input{padding-right:30px}
+.cs-field-clear{position:absolute;top:5px;right:6px;display:grid;width:22px;height:22px;place-items:center;padding:0;border:0;border-radius:4px;
+  background:transparent;color:var(--ink-3);font:inherit;font-size:15px;line-height:1;cursor:pointer;opacity:.55;transition:opacity .15s,background .15s}
+.cs-field:hover>.cs-field-clear,.cs-field:focus-within>.cs-field-clear,.cs-field-clear:focus-visible{opacity:1}
+.cs-field-clear:hover{background:var(--paper-2);color:var(--terra)}
+.cs-field-group>.cs-field-clear{top:-2px}
+.cs-field .cs-note{margin-top:6px;margin-bottom:0}
+.cs-field [aria-invalid="true"]{border-color:var(--terra)}
+.cs-document .cs-field-object>.c-structured-list>.c-structured-list-rows{gap:14px}
+.cs-document .c-structured-list.kv .c-structured-list-key{font-size:12px;color:var(--ink-2)}
+.cs-document .cs-field-group .cs-field-group{padding-top:2px}
+.cs-document .c-structured-list.kv>.c-structured-list-rows>.c-structured-list-row:has(>.c-structured-list-value>.cs-field-group){flex-wrap:wrap}
+.cs-document .c-structured-list.kv>.c-structured-list-rows>.c-structured-list-row:has(>.c-structured-list-value>.cs-field-group)>.c-structured-list-value{flex-basis:100%;padding:10px 0 0 12px;border-left:1px solid var(--line)}
+.cs-document .c-structured-list.kv .c-structured-list-key{max-width:40%;overflow-wrap:anywhere;white-space:normal}
+
+/* 修订记录抽屉 */
+.cs-history{width:760px}
+.cs-history .cr-revision-body{grid-template-columns:200px minmax(0,1fr)}
+.cs-history .cr-revision-diff section+section{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.cs-history .cr-revision-diff h3{margin:0 0 8px;font-size:13px}
+.cs-history-more{align-items:center;color:var(--ink-3)}
+.cs-history .cr-revision-error .c-btn{margin-left:10px}
+.cs-history .cr-drawer-head .edt-x{margin-left:auto}
+
+.cs-page button:focus-visible{outline:2px solid var(--gold-deep);outline-offset:2px}
+.cs-loading{display:grid;gap:24px;padding:12px 0;min-height:280px}
+.cs-loading span{display:block;height:48px;border-radius:6px;background:var(--paper-2)}
+.cs-loading .cs-loading-title{width:45%;height:28px}
+
+@container cs-page (max-width:760px){
+  .cs-layout{grid-template-columns:minmax(0,1fr);gap:14px}
+  .cs-nav{position:static;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;max-height:none;padding:0 0 12px;border-right:0;border-bottom:1px solid var(--line);overflow:visible}
+  .cs-nav-heading{display:none}
+  .cs-nav-search{max-width:200px}
+  .cs-nav-list{flex:1;flex-direction:row;min-width:0;overflow-x:auto;padding:4px;scrollbar-width:thin}
+  .cs-nav-item{flex:none;min-height:34px;padding:5px 12px}
+  .cs-nav-add{flex:none;margin-top:0;padding:5px 12px}
+  .cs-outline{width:100%;padding-top:0;border-top:0;margin:0}
+  .cs-outline-heading{display:none}
+  .cs-outline-toggle{display:block;padding:6px 10px;border:0;background:transparent;color:var(--ink-2);font:inherit;font-size:12px;cursor:pointer}
+  .cs-outline-list{display:none;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin-top:4px}
+  .cs-outline.open .cs-outline-list{display:grid}
+  .cs-head h1{font-size:22px}
+  .cs-head-actions{margin-left:0}
+  .cs-head-title{flex-basis:100%}
+  .cs-rules-toggle em{display:none}
+  .cs-rules-table th,.cs-rules-table td{padding:6px 7px}
+}
+@container cs-page (max-width:480px){
+  .cs-document{grid-template-columns:minmax(0,1fr);gap:24px}
+  .cs-head{gap:12px;padding-bottom:12px}
+}
+@media(max-width:720px){
+  .cs-history{width:100%}
+  .cs-history .cr-revision-body{grid-template-columns:1fr}
+  .cs-document .c-structured-list.kv>.c-structured-list-rows>.c-structured-list-row{flex-direction:column;gap:4px}
+  .cs-document .c-structured-list.kv .c-structured-list-key{max-width:100%}
+  .cs-document .c-structured-list.kv .c-structured-list-value{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .cs-page *{transition:none}
+}
+@media(hover:none){
+  .cs-page .c-content-action,.cs-outline-list button,.cs-nav-item,.cs-nav-add{min-height:44px}
+  .cs-field-clear{opacity:1}
+}
+.c-confirm-dialog.cs-discard-dialog{width:min(420px,100%)}
+.cs-discard-dialog .c-confirm-head{padding:24px 24px 10px}
+.cs-discard-dialog p{padding:0 24px 24px}
+.cs-discard-dialog .c-confirm-actions{padding:0 24px 24px;border:0;background:transparent;gap:10px}
+.cs-discard-dialog .c-confirm-actions .c-btn:not(.danger){background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.cs-discard-dialog .c-confirm-actions .c-btn.danger{background:var(--terra-wash);color:var(--terra);border:1px solid color-mix(in srgb,var(--terra) 28%,var(--line))}
+.cs-discard-dialog .c-confirm-actions .c-btn.danger:hover{border-color:var(--terra)}
+.cs-display-pages{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;grid-column:1/-1;margin-block:8px;font-size:12px;color:var(--ink-3)}
+.cs-display-pages .c-btn{padding:4px 8px;font-size:12px}
+.cs-display-pages input{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);font:inherit}
+.asst-custom__values dd>.asst-custom__values.is-deep{padding-inline-start:0;border-inline-start:0}
+.asst-custom__list.is-deep,.cs-document .asst-custom__values ol.is-deep{padding-inline-start:0;list-style-position:inside}
+.cs-document .c-structured-list.kv>.c-structured-list-rows>.c-structured-list-row:has(>.c-structured-list-value>.cs-field-group.is-deep)>.c-structured-list-value{padding-inline-start:0;border-left:0}
+.cs-document .cs-field-group.is-deep .c-structured-list-row{padding-inline-start:0;padding-inline-end:0}

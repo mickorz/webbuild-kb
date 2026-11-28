@@ -1,6 +1,6 @@
 # Replay Regression（Batch 5）
 
-离线回放的自动回归工程：serve v2.3 + Playwright，验证「已采集的功能能否稳定回放」。
+离线回放的自动回归工程：serve v2.6 + Playwright，验证「已采集的功能能否稳定回放」。
 
 ## 运行
 
@@ -13,7 +13,7 @@ node replay-regression.mjs
 ## 工程约束
 
 - 每次运行复制归档到 `.run/archive` 临时副本，**不改原始归档**
-- serve v2.3 模板取自 skill scripts 最新版，独立空闲端口，结束自动关闭
+- serve v2.6 模板取自 skill scripts 最新版（Endpoint Policy + SSE 事件级回放 + 游标语义），独立端端口、**每个场景重启以隔离 FIFO**
 - 每个页面场景独立 Browser Context；非本机请求一律拦截，**命中原站域名即失败**
 - 失败证据（截图/DOM/console/网络摘要/unmatched 增量）落 `report/evidence/<场景>/`
 - 报告: `report/ReplayCoverageReport.md`（入库）+ `coverage-<时间戳>.json`（不入库）
@@ -24,7 +24,7 @@ node replay-regression.mjs
 |----|------|
 | L1 页面 | 选择器可见、页面文本、元素计数 |
 | L2 API | 状态码 + JSON 字段（dot-path，`present` / `contains:` 前缀；字段断言用直接重放保证确定性） |
-| L3 匹配 | unmatched 增量 kind 检查（默认禁 `unmatched` / `ambiguous-*`）；并发 FIFO 确定性 |
+| L3 匹配 | unmatched 增量 kind 检查（默认禁 `unmatched` / `ambiguous-*`）；fallback **白名单**（含 `policy-query-ignore`，需逐场景登记，路径支持 `:id` 通配）；并发 FIFO 确定性 |
 | L4 完整性 | 原站泄漏拦截、JS 错误上限、404 必须为录制态、第三方依赖拦截记录 |
 
 ## 场景（scenarios.json）
