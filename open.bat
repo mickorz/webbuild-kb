@@ -1,19 +1,36 @@
 @echo off
-rem bishuxiezuo offline replay launcher.
+rem Offline replay launcher (portless edition).
 rem ASCII only + CRLF required: cmd.exe parses .bat as ANSI, LF endings break parsing.
-rem start serve.mjs if port 8787 is free, then open the replay page in the default browser.
+rem Usage: open.bat [site]   (site = folder under workspace, default: bishuxiezuo)
+rem Serves https://<site>.localhost via portless. One-time setup: npm install -g portless
 
-pushd "%~dp0workspace\bishuxiezuo\archive-bishu"
+setlocal
+set SITE=%~1
+if "%SITE%"=="" set SITE=bishuxiezuo
+if not exist "%~dp0workspace\%SITE%\" (
+    echo Site folder not found: workspace\%SITE%
+    exit /b 1
+)
 
-netstat -ano | findstr ":8787 " | findstr "LISTENING" >nul
+rem Find the archive folder that contains serve.mjs under workspace\site
+set ARCHIVE=
+for /d %%D in ("%~dp0workspace\%SITE%\*") do if exist "%%D\serve.mjs" set ARCHIVE=%%D
+if "%ARCHIVE%"=="" (
+    echo No serve.mjs found in workspace\%SITE% subfolders - nothing to serve.
+    exit /b 1
+)
+
+pushd "%ARCHIVE%"
+portless list 2>nul | findstr /c:"%SITE%" >nul
 if errorlevel 1 (
-    echo Starting UIForge replay server...
-    start "uiforge-replay" /min cmd /c "node serve.mjs > ..\serve.log 2>&1"
-    ping -n 3 127.0.0.1 >nul
+    echo Starting https://%SITE%.localhost via portless...
+    start "portless-%SITE%" /min cmd /c "portless %SITE% node serve.mjs > ..\portless-serve.log 2>&1"
+    ping -n 5 127.0.0.1 >nul
 ) else (
     echo Replay server already running.
 )
 popd
 
-start "" "http://localhost:8787/console/console.html"
-echo Opened http://localhost:8787/console/console.html
+start "" "https://%SITE%.localhost/"
+echo Opened https://%SITE%.localhost/
+endlocal

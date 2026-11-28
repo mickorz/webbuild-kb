@@ -34,6 +34,32 @@ git submodule update --init --recursive
 git submodule update --remote
 ```
 
+## 本地回放访问（portless）
+
+克隆站点的离线回放统一通过 [portless](https://github.com/vercel-labs/portless) 访问：每个站点获得固定的 `https://<站名>.localhost` 域名，端口由 portless 自动分配，多个回放服务器可同时运行而互不冲突（不再依赖固定端口号）。
+
+首次使用（一次性，需要 Node.js 24+）：
+
+```bash
+npm install -g portless
+```
+
+启动某个站点的回放：
+
+```bash
+# 方式一：仓库根目录的 open.bat，默认 bishuxiezuo，可传站点名
+open.bat bishuxiezuo
+
+# 方式二：手动在归档目录启动
+cd workspace/<站点>/<归档目录>
+portless <站点名> node serve.mjs
+# 浏览器打开 https://<站点名>.localhost/
+```
+
+约定：`workspace/<站点>/` 下的站点以其目录名作为 portless 路由名（如 `bishuxiezuo` → `https://bishuxiezuo.localhost`）。首次以 HTTPS 启动时 portless 会创建本地 CA 并请求管理员授权写入系统信任存储，之后浏览器即可直接信任 `*.localhost` 证书。
+
+诊断：`portless list` 查看活动路由，`portless doctor` 排查访问问题。
+
 ## 说明
 
 - 三个子模块均为第三方开源项目的只读镜像，本仓库不修改其源码；各自的许可协议以其仓库为准。
