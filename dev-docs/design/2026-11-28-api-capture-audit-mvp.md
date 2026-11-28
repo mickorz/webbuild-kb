@@ -99,6 +99,10 @@ flowchart TD
 
 kind 取值：`response-body-unreadable` / `response-too-large` / `handler-error`。
 
+### 补充（Batch 3）：同签名多响应版本（serve v2.3）
+
+index.json 允许同 key 多条目：同一请求签名（METHOD + 归一化URL + 请求体指纹）在不同业务状态下的不同响应全保留，响应文件按内容哈希命名；回放按 FIFO 顺序消费，超出后停在最后一版；相同响应体跨运行去重。配套行为：query 参数排序归一化；URL 级回退命中多个不同变体时拒绝猜测（599 + `ambiguous-body-variant` / `ambiguous-query-variant` 留痕）；录制的 5xx 原样回放；超 1MB 请求体截断入库（标 `reqBodyTruncated`）但指纹按完整体计算，回放侧超 10MB 截断请求不做指纹匹配。
+
 ## 六、明确不做（YAGNI）
 
 - 不修改 `thirdparties/` 任何子模块

@@ -1,8 +1,8 @@
 # API 覆盖率审计报告
 
 - 归档: E:\WorkProjects\webbuild-kb\workspace\bishuxiezuo\archive-bishu
-- 时间: 2026-11-28T03:43:54.471Z
-- 总条目 340，API 条目 46，去重 API 端点 41
+- 时间: 2026-11-28T06:44:07.417Z
+- 总条目 341，API 条目 46，去重 API 端点 41
 - API 状态分布: {"200":39,"201":2,"202":1,"204":2,"404":2}
 
 ## 端点清单（API）
@@ -81,6 +81,14 @@
 | POST | /api/analytics/pageviews | POST https://bishuxiezuo.cn/api/analytics/pageviews |
 | POST | /api/assistant/sessions | POST https://bishuxiezuo.cn/api/assistant/sessions |
 | POST | /api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/welcome | POST https://bishuxiezuo.cn/api/assistant/sessions/e7f44f7d-c45f-4eec-b7c9-cc29cbc2133f/welcome?locale=zh-CN |
+
+## 同签名多响应版本（FIFO）
+
+无
+
+## 请求体截断（reqBodyTruncated）
+
+无
 
 ## 归档文件缺失
 

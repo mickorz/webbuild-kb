@@ -57,6 +57,12 @@ const variants = apiGroups.filter(g => g.items.length > 1)
 // 4 POST 无请求体记录（旧格式数据无法按请求体区分变体）
 const noReqBody = apiGroups.flatMap(g => g.items).filter(e => e.method !== 'GET' && !e.reqBody)
 
+// 同签名多响应版本（FIFO 数据）；请求体截断条目
+const keyVersions = new Map()
+for (const e of entries) keyVersions.set(e.key, (keyVersions.get(e.key) || 0) + 1)
+const multiVersion = [...keyVersions.entries()].filter(([, n]) => n > 1)
+const truncatedReq = entries.filter(e => e.reqBodyTruncated)
+
 // 5 归档文件缺失
 const missingFiles = entries.filter(e => e.file && !existsSync(join(archiveDir, 'files', e.file)))
 
@@ -133,6 +139,26 @@ if (noReqBody.length) {
   for (const e of noReqBody) md.push(`| ${e.method} | ${pathOf(e.url)} | ${e.key} |`)
 } else md.push('无')
 md.push('')
+md.push('## 同签名多响应版本（FIFO）')
+md.push('')
+if (multiVersion.length) {
+  md.push('> 同一请求签名录到多个不同响应（不同业务状态），回放按 FIFO 顺序消费，超出后停在最后一版。')
+  md.push('')
+  md.push('| key | 版本数 |')
+  md.push('|-----|--------|')
+  for (const [k, n] of multiVersion) md.push(`| ${k} | ${n} |`)
+} else md.push('无')
+md.push('')
+md.push('## 请求体截断（reqBodyTruncated）')
+md.push('')
+if (truncatedReq.length) {
+  md.push('> 请求体超 1MB 仅存前 4KB；回放指纹按完整请求体计算不受影响，但审计时无法核对入库内容。')
+  md.push('')
+  md.push('| 方法 | 路径 | key |')
+  md.push('|------|------|-----|')
+  for (const e of truncatedReq) md.push(`| ${e.method} | ${pathOf(e.url)} | ${e.key} |`)
+} else md.push('无')
+md.push('')
 md.push('## 归档文件缺失')
 md.push('')
 if (missingFiles.length) {
@@ -184,5 +210,5 @@ md.push('')
 mkdirSync(resolve(outPath, '..'), { recursive: true })
 writeFileSync(outPath, md.join('\n'))
 
-console.log(`端点 ${apiGroups.length} | API条目 ${apiGroups.reduce((a, g) => a + g.items.length, 0)} | 异常状态 ${badStatus.length} | 变体冲突 ${variants.length} | POST缺请求体 ${noReqBody.length} | 文件缺失 ${missingFiles.length} | 丢弃 ${fails.length} | 回放未命中 ${unmatched.length}${extraArg ? ` | 补采缺失 ${extraMissing.length}` : ''}`)
+console.log(`端点 ${apiGroups.length} | API条目 ${apiGroups.reduce((a, g) => a + g.items.length, 0)} | 异常状态 ${badStatus.length} | 变体冲突 ${variants.length} | 多版本签名 ${multiVersion.length} | POST缺请求体 ${noReqBody.length} | 截断body ${truncatedReq.length} | 文件缺失 ${missingFiles.length} | 丢弃 ${fails.length} | 回放未命中 ${unmatched.length}${extraArg ? ` | 补采缺失 ${extraMissing.length}` : ''}`)
 console.log('报告:', outPath)

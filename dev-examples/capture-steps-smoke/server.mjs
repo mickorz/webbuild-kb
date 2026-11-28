@@ -1,12 +1,15 @@
-// 冒烟服务器：验证 capture-steps 修复（body 变体保留 / failures 落盘 / reqBody 入库）
+// 冒烟服务器：验证 capture-steps 修复（body 变体保留 / failures 落盘 / reqBody 入库 / 同签名多响应 FIFO）
 import http from 'node:http'
 
 const BIG = 'x'.repeat(13 * 1024 * 1024) // 超过 12MB 上限，应触发 response-body-too-large
+let sessionN = 0                          // 同签名 POST /api/session 每次返回不同 n，验证 FIFO 多版本采集
 const page = `<!doctype html><html><body>
-<button id="goA">A</button><button id="goB">B</button>
+<button id="goA">A</button><button id="goB">B</button><button id="goS1">S1</button><button id="goS2">S2</button>
 <script>
 document.getElementById('goA').onclick = () => fetch('/api/echo', { method: 'POST', body: '{"k":"A"}' })
 document.getElementById('goB').onclick = () => fetch('/api/echo', { method: 'POST', body: '{"k":"B"}' })
+document.getElementById('goS1').onclick = () => fetch('/api/session', { method: 'POST', body: '{}' })
+document.getElementById('goS2').onclick = () => fetch('/api/session', { method: 'POST', body: '{}' })
 fetch('/api/big')
 </script></body></html>`
 
@@ -17,6 +20,10 @@ http.createServer((req, res) => {
     req.on('data', c => b += c)
     req.on('end', () => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ got: b })) })
     return
+  }
+  if (req.url === '/api/session' && req.method === 'POST') {
+    res.writeHead(200, { 'content-type': 'application/json' })
+    return res.end(JSON.stringify({ n: ++sessionN }))
   }
   if (req.url === '/api/big') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end(BIG) }
   res.writeHead(404); res.end()
