@@ -1,6 +1,6 @@
 ---
 name: uiforge-site-clone
-version: 1.2.0
+version: 1.3.0
 display_name: 网站复刻抓取
 display_name_en: UIForge Site Clone
 description: >
@@ -86,6 +86,24 @@ cmd //c start "" http://localhost:8787/console/console.html
 cd .. && node ../../.claude/skills/uiforge-site-clone/scripts/inject-auth-seed.mjs --auth ./auth.json --files ./archive-<站点名>/files --entry <入口页相对路径，如 console/console.html>
 ```
 
+## API 覆盖率审计与交互补采
+
+自动探索覆盖不到多步导航/中文按钮才能到达的子视图（见 dev-docs/experience/uiforge-explore-misses-interaction-gated-views.md），需要补采 + 审计闭环（设计方案见 dev-docs/design/2026-11-28-api-capture-audit-mvp.md）：
+
+```bash
+# 交互补采：有头浏览器里人工操作目标功能，回终端按 Enter 结束录制，自动合并进归档
+# （要求终端 TTY；无 reqBody 的旧归档条目不会被覆盖错乱，key 含请求体指纹）
+node ./capture-steps.mjs --out ./archive-<站点名> --state ./auth.json \
+  --url <登录后入口页URL> --interactive
+
+# 丢弃/失败会落盘 capture-failures.jsonl，不再静默
+
+# 审计：端点清点、异常状态、变体冲突、POST 缺请求体、文件缺失、丢弃统计
+node ../../.claude/skills/uiforge-site-clone/scripts/api-coverage-audit.mjs \
+  --archive ./archive-<站点名> [--extra <补采归档>/index.json]
+# 输出 api-coverage-report.md；判读顺序：先看 401/404（登录态）→ 变体冲突（覆盖历史）→ POST 缺请求体（旧格式）
+```
+
 ## Error Policy
 
 - **登录墙**：停下向用户索要账号密码（含 memory 中已有旧凭据的情况，需用户确认沿用），拿到后写入站点目录的 `credentials.json` 再继续；禁止自行尝试凭据
@@ -97,4 +115,5 @@ cd .. && node ../../.claude/skills/uiforge-site-clone/scripts/inject-auth-seed.m
 ## References
 
 - [references/clone-flow.md](references/clone-flow.md) — 完整执行流程与排错
+- dev-docs/design/2026-11-28-api-capture-audit-mvp.md — API 补采与覆盖率审计三期设计
 - [examples/bishuxiezuo-example.md](examples/bishuxiezuo-example.md) — 一次真实执行的完整参数与结果记录

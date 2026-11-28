@@ -32,6 +32,10 @@ node capture-steps.mjs --out ./archive-bishu --state ./auth.json \
 
 本次补录新增 31 条响应（328 条总数），回放里向导正常出现：`cr-shell`、`cr-wbe=9`；点「编辑」后 `.cr-wbe-ehead` 出现，询问助手 / AI 改写 / 完成 三按钮齐备。
 
+### 补充（2026-11-28）：采集脚本缺陷修复
+
+后续审计发现 capture-steps 两个静默缺陷并已修复：同 URL 不同请求体曾互相覆盖（key 现含请求体 sha256 指纹）、超 12MB 或不可读响应曾静默丢弃（现落盘 `capture-failures.jsonl`）；另新增 `--interactive` 人工补采模式与 `api-coverage-audit.mjs` 覆盖率审计，见 dev-docs/design/2026-11-28-api-capture-audit-mvp.md。
+
 ## 预防/注意事项
 
 - **token 会过期**：抓取前先确认 `auth.json` 里 access_token 的 `exp`，过期就重跑登录；录到 401 的归档回放必失败
