@@ -1,3 +1,0 @@
-event: error
-data: {"code":"task_stream_unavailable","message":"任务进度连接中断，请稍后重试。"}
-

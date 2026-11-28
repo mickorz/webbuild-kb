@@ -30,3 +30,6 @@ workspace/*/regression/.run/
 workspace/*/regression/report/evidence/
 workspace/*/regression/report/coverage-*.json
 # 流式样本可能很大，但属于归档资产：不忽略（如后续体积失控再单独处理）
+
+# E02 差异排查临时归档副本（运行产物）
+dev-examples/**/tmp*/
