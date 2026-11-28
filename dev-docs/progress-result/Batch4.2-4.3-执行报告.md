@@ -36,7 +36,7 @@
 
 ### 1. 流式端点无法用 `r.body()` 采集（E04 预判被实证）
 
-`capture-failures.jsonl` 在实战中首次大量触发：**87 条 `response-body-unreadable`**，全部指向 `GET /api/engine-tasks/<id>/stream`。这证明：
+`capture-failures.jsonl` 在实战中首次大量触发。**修正（2026-11-28 复核）**：累计 135 条的实际构成是 **132 条第三方字体（fonts.gstatic.com，跨域 CORS 使 body 不可读）+ 3 条同源 `GET /api/engine-tasks/<id>/stream`**。本文早期版本写「全部指向流式端点」有误——当时 87 条里绝大多数也是字体噪声。已修正采集器：第三方域名不再尝试采集，流式端点单独记 `stream-not-captured`。结论仍然成立：
 - 站点 AI 生成走的是流式端点，不是普通响应
 - 现有采集器读不到流式 body，但机制如实留痕而非静默丢弃
 - E04 必须单独设计流式采集（SSE/ReadableStream 事件级），不能沿用普通 HTTP 采集验收标准
@@ -73,5 +73,5 @@
 
 - 69 个去重端点、189 条 API 条目、多版本签名 25、变体冲突 28
 - 异常状态 17 条，**全部是正常空态**（`/outlines/volume/latest`、`/outlines/near-term/latest` ×7、`/chapters/1` 与 `/chapters/1/guide`），非错误
-- 丢弃 135 条 `response-body-unreadable`，全部指向流式端点
+- 丢弃累计 135 条 = 132 第三方字体 + 3 同源流式（修正后的分类见上；采集器已改为第三方不采集、流式单独标记）
 - 文件缺失 0

@@ -64,6 +64,10 @@ const extFromCt = ct => {
 const hash = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h.toString(36) }
 
 const idx = JSON.parse(readFileSync(join(outDir, 'index.json'), 'utf8'))
+// 第三方域名不采集：离线副本不需要跨域字体/埋点，且 browser 侧 CORS 使 body 不可读，
+// 若混入 failures 会淹没真信号（曾导致 132 条字体噪声盖住 3 条真流式失败）
+const originHost = (() => { try { return new URL(idx.origin).host } catch { return null } })()
+const isThirdParty = u => { try { return originHost && new URL(u).host !== originHost } catch { return true } }
 
 const browser = await chromium.launch({ headless: !interactive })
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, storageState: existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : undefined })
@@ -77,9 +81,16 @@ page.on('response', async r => {
   try {
     const req_ = r.request(); m = req_.method(); u = r.url()
     if (/^data:|^blob:/.test(u)) return
+    if (isThirdParty(u)) return   // 第三方资源不采集
     const rawReq = req_.postData() || null
     let reqBody = null, reqBodyTruncated = false
     if (rawReq) { reqBodyTruncated = rawReq.length > MAX_REQ_BODY; reqBody = reqBodyTruncated ? rawReq.slice(0, 4096) : rawReq }
+    const ct = r.headers()['content-type'] || ''
+    // 流式响应：content-type=text/event-stream 或 /stream 端点，body 读取会挂住或不可读
+    if (ct.includes('event-stream') || /\/stream(\?|$)/.test(new URL(u).pathname)) {
+      fail({ kind: 'stream-not-captured', method: m, url: u, status: r.status(), ct })
+      return
+    }
     const body = await r.body().catch(() => null)
     if (!body) { fail({ kind: 'response-body-unreadable', method: m, url: u, status: r.status() }); return }
     if (body.length > MAX_BODY) { fail({ kind: 'response-body-too-large', method: m, url: u, status: r.status(), size: body.length }); return }
@@ -136,7 +147,7 @@ else for (const step of steps) {
         let el = b
         for (let i = 0; i < 8 && el; i++) {
           el = el.parentElement
-          if (el && (el.textContent || '').includes(t)) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
+          if (el && (el.textContent || '').includes(t) && el.querySelectorAll('.bc-open').length === 1) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
         }
       }
       return null

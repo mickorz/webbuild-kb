@@ -160,7 +160,11 @@ for (const sc of conf.scenarios) {
             const pos = await page.evaluate(t => {
               for (const b of document.querySelectorAll('.bc-open')) {
                 let el = b
-                for (let i = 0; i < 8 && el; i++) { el = el.parentElement; if (el && (el.textContent || '').includes(t)) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } } }
+                for (let i = 0; i < 8 && el; i++) {
+                  el = el.parentElement
+                  // 容器必须只含 1 个 .bc-open，否则会命中整个列表容器而点到相邻书籍
+                  if (el && (el.textContent || '').includes(t) && el.querySelectorAll('.bc-open').length === 1) { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
+                }
               }
               return null
             }, st.clickCard)

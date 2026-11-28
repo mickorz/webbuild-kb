@@ -1,6 +1,9 @@
 #!/usr/bin/env node
-// serve-upgrade-version: 2.3
-// UIForge replay server v2.3 — 完整性加固（Batch 3，见 dev-docs/progress-result/Batch3-执行报告.md）:
+// serve-upgrade-version: 2.4
+// UIForge replay server v2.4 — 在 v2.3 基础上加 Endpoint Replay Policy（Batch 6）:
+//   默认 fifo（向后兼容）；replay-policies.json 可声明某些 GET 端点用 latest（取最后录制版本）。
+//   策略只决定「同一已精确匹配签名内多版本如何选」，不绕过指纹匹配与歧义拒绝。
+// v2.3 既有能力不变：同签名 FIFO、query 排序归一化、歧义拒绝、原始 5xx、截断请求体不指纹。
 //   1 同签名多响应 FIFO: 归档允许同 key 多条目（同一请求在不同业务状态下的不同响应），按请求顺序消费，超出后停在最后一版
 //   2 Query 排序归一化: 参数顺序不同视为同一 URL，消除顺序误判
 //   3 歧义检测: URL 级宽松回退命中多个不同变体时拒绝猜测（599 + 留痕），唯一候选才允许回退且留痕
@@ -26,7 +29,27 @@ for (const e of idx.entries) {
   if (hi > 0) add(byBody, e.method + ' ' + norm(e.url) + e.key.slice(hi), e)   // 请求体指纹变体
 }
 const fifo = new Map()   // 签名 → 已消费次数
-const pick = (map, sig) => { const a = map.get(sig); if (!a) return null; const n = fifo.get(sig) || 0; fifo.set(sig, n + 1); return a[Math.min(n, a.length - 1)] }
+// Endpoint Replay Policy: 按 method + path 模式（:id 为单段通配）决定 fifo / latest
+const POLICIES = (() => {
+  try { return JSON.parse(readFileSync(path.join(HERE, 'replay-policies.json'), 'utf8')) } catch { return { default: 'fifo', rules: [] } }
+})()
+const pathnameOf = u => { try { return new URL(u).pathname } catch { return u } }
+const policyFor = (method, pathname) => {
+  for (const r of POLICIES.rules || []) {
+    if (r.method && r.method !== method) continue
+    const re = new RegExp('^' + String(r.path).replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/:([A-Za-z_]+)/g, '[^/]+') + '$')
+    if (re.test(pathname)) return r.mode === 'latest' ? 'latest' : 'fifo'
+  }
+  return POLICIES.default === 'latest' ? 'latest' : 'fifo'
+}
+const pick = (map, sig, mode) => {
+  const a = map.get(sig)
+  if (!a) return null
+  if (mode === 'latest') return a[a.length - 1]   // 幂等快照类：始终取最后录制版本
+  const n = fifo.get(sig) || 0
+  fifo.set(sig, n + 1)
+  return a[Math.min(n, a.length - 1)]
+}
 const PORT = +(process.env.PORT || 8787)
 const HOST = process.env.HOST || '127.0.0.1'   // local replay; set HOST=0.0.0.0 to expose it
 const MISS_STATUS = +(process.env.REPLAY_MISS || 599)   // 未命中状态码；REPLAY_MISS=204 回退 v1 行为
@@ -55,7 +78,8 @@ http.createServer(async (req, res) => {
   const missBase = { method: req.method, url: idx.origin + req.url, bodyHash: bh || null, bodyLen: rb ? rb.buf.length : 0 }
   let sigP = null; try { sigP = req.method + ' ' + new URL(full).pathname } catch {}
   let e = null, loose = null
-  if (bh) e = pick(byBody, req.method + ' ' + norm(full) + bh)   // 指纹精确命中（FIFO 消费版本）
+  const policy = policyFor(req.method, pathnameOf(full))   // Endpoint Replay Policy
+  if (bh) e = pick(byBody, req.method + ' ' + norm(full) + bh, policy)   // 指纹精确命中（按 policy 选版本）
   if (!e) {
     const cands = byNorm.get(req.method + ' ' + norm(full))
     if (cands) {
@@ -63,7 +87,7 @@ http.createServer(async (req, res) => {
         // 带 body（或 body 被截断）但指纹没对上: 唯一变体才允许宽松回退并留痕，多个变体拒绝猜测
         if (new Set(cands.map(x => x.key)).size > 1) return rejectAmbiguous(res, 'ambiguous-body-variant', missBase)
         e = cands[0]; loose = rb && rb.truncated ? 'request-body-truncated' : 'body-variant-fallback'
-      } else e = pick(byNorm, req.method + ' ' + norm(full))   // 无 body 请求（如 GET）: 同签名多响应 FIFO
+      } else e = pick(byNorm, req.method + ' ' + norm(full), policy)   // 无 body 请求（如 GET）: 按 policy 选版本
     }
   }
   if (!e && sigP) {
@@ -99,4 +123,4 @@ http.createServer(async (req, res) => {
   if (err.code === 'EADDRINUSE') console.error('\n  port ' + PORT + ' is busy — retry with:  PORT=' + (PORT + 1) + ' node serve.mjs\n')
   else console.error('\n  replay server error: ' + err.message + '\n')
   process.exit(1)
-}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.3 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + '\n'))
+}).listen(PORT, HOST, () => console.log('\n  UIForge replay v2.4 → http://localhost:' + PORT + '  (' + idx.count + ' responses, ' + idx.start + ')' + (MISS_STATUS === 599 ? '  [miss→599+unmatched.jsonl, FIFO/latest policy, 5xx preserved]' : '  [miss→' + MISS_STATUS + ']') + (POLICIES.rules && POLICIES.rules.length ? '  policies=' + POLICIES.rules.length : '') + '\n'))

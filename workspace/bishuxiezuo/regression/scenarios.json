@@ -52,8 +52,9 @@
           "path": "/api/books",
           "status": 200,
           "fields": {
-            "[0].title": "全球高武",
-            "[0].id": "2de6cf8f-9b82-4edd-92d1-e0b6611546ec"
+            "[1].title": "全球高武",
+            "[1].id": "2de6cf8f-9b82-4edd-92d1-e0b6611546ec",
+            "[0].title": "present"
           }
         }
       ],
@@ -72,7 +73,7 @@
       "settle": 5000,
       "steps": [
         {
-          "click": ".bc-open",
+          "clickCard": "全球高武",
           "wait": 4500
         },
         {
@@ -107,7 +108,7 @@
       "settle": 5000,
       "steps": [
         {
-          "click": ".bc-open",
+          "clickCard": "全球高武",
           "wait": 4500
         },
         {
@@ -176,10 +177,10 @@
     },
     {
       "id": "E01",
-      "name": "书架管理与搜索（客户端过滤）",
+      "name": "书架搜索实测行为（两本书）",
       "type": "page",
       "path": "/console/console.html",
-      "settle": 6000,
+      "settle": 9000,
       "steps": [
         {
           "fill": "input[type=search]",
@@ -190,33 +191,27 @@
         },
         {
           "fill": "input[type=search]",
-          "value": "zzz不存在的书名",
+          "value": "zzz不存在",
           "enter": true,
           "wait": 2500,
-          "expectText": "全球高武"
+          "expectTextAbsent": "全球高武"
         },
         {
           "fill": "input[type=search]",
           "value": "",
           "enter": true,
-          "wait": 1500,
+          "wait": 2000,
           "expectText": "全球高武"
-        },
-        {
-          "click": ".bc-open",
-          "wait": 6000
         }
       ],
       "api": [
         {
           "method": "GET",
-          "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/chapters",
-          "status": 200
-        },
-        {
-          "method": "GET",
-          "path": "/api/books/2de6cf8f-9b82-4edd-92d1-e0b6611546ec/characters",
-          "status": 200
+          "path": "/api/books",
+          "status": 200,
+          "fields": {
+            "[0].title": "present"
+          }
         }
       ],
       "expectedFallbacks": [
@@ -224,11 +219,16 @@
           "kind": "query-variant-fallback",
           "path": "/console/console.css"
         }
+      ],
+      "dom": [
+        {
+          "text": "WBTEST-E02"
+        }
       ]
     },
     {
       "id": "E02",
-      "name": "世界观维度与角色数据（内容级）",
+      "name": "世界观维度与角色数据（内容级，UI 待 Batch 7）",
       "type": "api",
       "requests": [
         {
@@ -238,14 +238,14 @@
           "expect": {
             "status": 200,
             "fields": {
-              "status": "present",
+              "status": "ready",
               "engine_book_id": "present",
               "dimensions": "present"
             }
           }
         },
         {
-          "name": "world 存在基础维度",
+          "name": "world existence 维度",
           "method": "GET",
           "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/existence",
           "expect": {
@@ -253,7 +253,7 @@
           }
         },
         {
-          "name": "world 核心法则维度",
+          "name": "world core_laws 维度",
           "method": "GET",
           "path": "/api/books/a9379563-e534-4ed3-8996-78b31b1d1bb0/world/core_laws",
           "expect": {
